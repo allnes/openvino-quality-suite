@@ -1,0 +1,62 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "oviqs"
+version = "0.1.0"
+description = "OpenVINO Inference Quality Suite for LLMs"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Apache-2.0" }
+authors = [{ name = "OVIQS contributors" }]
+dependencies = [
+  "numpy>=1.26",
+  "scipy>=1.11",
+  "pydantic>=2.6",
+  "typer>=0.12",
+  "rich>=13.7",
+  "pyyaml>=6.0",
+  "tqdm>=4.66",
+  "pandas>=2.0",
+]
+
+[project.optional-dependencies]
+openvino = [
+  "openvino>=2025.0",
+  "optimum-intel[openvino]>=1.20",
+  "transformers>=4.40",
+  "torch>=2.2",
+]
+genai = ["openvino-genai>=2025.0"]
+eval = ["lighteval>=0.8", "lm-eval[api]>=0.4.0"]
+rag = ["ragas>=0.2"]
+agent = ["deepeval>=2.0", "openevals>=0.0.1", "agentevals>=0.0.1"]
+observability = ["arize-phoenix>=7.0", "opik>=1.0"]
+plots = ["matplotlib>=3.8"]
+dev = ["pytest>=8.0", "pytest-cov>=5.0", "ruff>=0.5", "mypy>=1.10"]
+
+[project.scripts]
+oviq = "oviqs.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/oviqs"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+  "openvino: tests requiring OpenVINO runtime or exported models",
+  "integration: integration tests",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = false
+ignore_missing_imports = true

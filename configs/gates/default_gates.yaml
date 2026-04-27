@@ -1,0 +1,33 @@
+inference_equivalence:
+  mean_kl_max: 0.01
+  p95_kl_max: 0.05
+  mean_js_max: 0.01
+  abs_mean_entropy_drift_max: 0.15
+  mean_logit_cosine_min: 0.995
+
+likelihood:
+  ppl_relative_delta_vs_ref_max: 0.05
+  nll_delta_vs_ref_max: 0.10
+
+long_context:
+  lost_in_middle_score_max: 0.40
+  degradation_slope_min: -0.25
+  distractor_sensitivity_max: 0.80
+  context_gain_64k_min: 0.00
+
+serving:
+  batch_invariance_mean_kl_max: 0.005
+  kv_cache_mean_kl_max: 0.005
+  kv_cache_p95_kl_max: 0.025
+
+rag:
+  faithfulness_min: 0.80
+  supported_claim_ratio_min: 0.75
+  contradiction_rate_max: 0.08
+
+agent:
+  tool_call_validity_min: 0.95
+  redundant_tool_call_rate_max: 0.25
+  observation_grounding_score_min: 0.80
+  agent_state_drift_max: 0.15
+  policy_violation_rate_max: 0.01

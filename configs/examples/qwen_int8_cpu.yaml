@@ -1,0 +1,33 @@
+run:
+  id: qwen_int8_cpu
+  suite: openvino_llm_quality_v1
+
+models:
+  reference:
+    backend: hf
+    path: /models/qwen-hf
+    device: cpu
+  current_eval:
+    backend: optimum-openvino
+    path: /models/qwen-ov-eval-int8
+    device: CPU
+  current_genai:
+    backend: openvino-genai
+    path: /models/qwen-ov-prod-int8
+    device: CPU
+
+datasets:
+  likelihood: ./data/likelihood.jsonl
+  drift: ./data/drift_prompts.jsonl
+  controlled_long_context: ./data/controlled_long_context.jsonl
+  rag: ./data/rag_eval.jsonl
+  agent_traces: ./runs/agent_traces.jsonl
+
+likelihood:
+  window_size: 4096
+  stride: 1024
+
+long_context:
+  lengths: [4096, 8192, 16384, 32768, 65536]
+
+gates: ./configs/gates/default_gates.yaml

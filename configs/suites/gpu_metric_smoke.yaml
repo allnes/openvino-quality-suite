@@ -1,0 +1,85 @@
+run:
+  id: gpu_metric_smoke
+  suite: openvino_llm_quality_v1_gpu
+
+architecture:
+  logits_level:
+    backend: openvino-runtime
+    device: GPU
+    metrics:
+      - nll
+      - perplexity
+      - sliding_window_ppl
+      - position_bucketed_ppl
+      - self_kl
+      - self_js
+      - entropy_drift
+      - logit_cosine
+      - batch_invariance_drift
+  generation_layer:
+    backend: openvino-genai
+    device: GPU
+    metrics:
+      - ngram_repetition
+      - json_validity
+  application_layer:
+    metrics:
+      - rag_evidence_coverage
+      - supported_claim_ratio_placeholder
+      - tool_call_validity
+      - redundant_tool_call_rate
+      - agent_state_drift
+      - observation_grounding_placeholder
+
+models:
+  validated_gpt2_logits:
+    hf_id: openai-community/gpt2
+    export_task: text-generation
+    weight_format: fp16
+    output_dir: models/openai-community--gpt2-eval-fp16
+  validated_gpt2_genai:
+    hf_id: openai-community/gpt2
+    export_task: text-generation-with-past
+    weight_format: fp16
+    output_dir: models/openai-community--gpt2-genai-fp16
+  qwen3_logits:
+    hf_id: Qwen/Qwen3-0.6B
+    export_task: text-generation
+    weight_format: int4
+    output_dir: models/qwen3_0_6b-eval-int4
+  qwen3_genai:
+    hf_id: Qwen/Qwen3-0.6B
+    export_task: text-generation-with-past
+    weight_format: int4
+    output_dir: models/qwen3_0_6b-genai-int4
+  gpt_oss_logits:
+    hf_id: openai/gpt-oss-20b
+    export_task: text-generation
+    weight_format: int4
+    output_dir: models/openai--gpt-oss-20b-eval-int4
+  mistral7b_logits:
+    hf_id: mistralai/Mistral-7B-Instruct-v0.3
+    export_task: text-generation
+    weight_format: int4
+    output_dir: models/OpenVINO--Mistral-7B-Instruct-v0.3-int4-ov
+  gemma3_logits:
+    hf_id: google/gemma-3-270m-it
+    export_task: text-generation
+    weight_format: int4
+    output_dir: models/gemma3_270m_it-eval-int4
+  smoke_logits:
+    hf_id: sshleifer/tiny-gpt2
+    export_task: text-generation
+    weight_format: fp16
+    output_dir: models/sshleifer--tiny-gpt2-eval_logits
+  qwen_logits:
+    hf_id: Qwen/Qwen2.5-0.5B-Instruct
+    export_task: text-generation
+    weight_format: fp16
+    output_dir: models/qwen--qwen2-5-0-5b-instruct-eval_logits
+
+datasets:
+  likelihood: data/smoke_likelihood.jsonl
+
+outputs:
+  report: reports/target-models/gpt2_gpu_suite.json

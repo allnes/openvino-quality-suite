@@ -1,0 +1,8 @@
+name: openvino_llm_quality_v1
+metrics:
+  - inference_equivalence
+  - likelihood
+  - long_context
+  - rag
+  - agent
+  - serving

@@ -1,0 +1,320 @@
+import json
+
+from typer.testing import CliRunner
+
+from oviqs.cli import app
+
+
+def test_eval_long_context_cli_computes_metrics(tmp_path):
+    dataset = tmp_path / "long.jsonl"
+    dataset.write_text(
+        json.dumps(
+            {
+                "id": "l1",
+                "task_type": "long_context",
+                "context": "alpha beta gamma",
+                "target": "delta",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    out = tmp_path / "long_report.json"
+
+    result = CliRunner().invoke(
+        app,
+        [
+            "eval-long-context",
+            "--dataset",
+            str(dataset),
+            "--out",
+            str(out),
+            "--model",
+            "dummy",
+            "--backend",
+            "dummy",
+            "--lengths",
+            "12,16",
+            "--window-size",
+            "8",
+            "--stride",
+            "4",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(out.read_text(encoding="utf-8"))
+    assert payload["long_context"]["context_gain"]
+    assert "lost_in_middle_score" in payload["long_context"]
+
+
+def test_eval_serving_cli_computes_batch_metrics(tmp_path):
+    out = tmp_path / "serving.json"
+    result = CliRunner().invoke(
+        app,
+        ["eval-serving", "--out", str(out), "--model", "dummy", "--backend", "dummy"],
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(out.read_text(encoding="utf-8"))
+    assert payload["serving"]["batch_invariance"]["mean_kl"] == 0.0
+    assert payload["serving"]["generation_prefix_divergence"]["prefix_divergence_rate"] == 0.0
+    assert "batch_invariance" in payload["metric_references"]["serving"]
+
+
+def test_eval_rag_cli_computes_rule_based_metrics(tmp_path):
+    dataset = tmp_path / "rag.jsonl"
+    answers = tmp_path / "answers.jsonl"
+    dataset.write_text(
+        json.dumps(
+            {
+                "id": "r1",
+                "task_type": "rag",
+                "retrieved_contexts": ["Doc A says April 16.", "Noise"],
+                "expected_evidence": ["April 16"],
+                "references": ["doc-a"],
+                "metadata": {"relevant_context_indices": [0]},
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    answers.write_text(
+        json.dumps(
+            {
+                "id": "r1",
+                "answer": "April 16",
+                "claims": ["April 16"],
+                "citations": ["doc-a"],
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    out = tmp_path / "rag_report.json"
+
+    result = CliRunner().invoke(
+        app,
+        ["eval-rag", "--dataset", str(dataset), "--answers", str(answers), "--out", str(out)],
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(out.read_text(encoding="utf-8"))
+    assert payload["rag"]["evidence_coverage"] == 1.0
+    assert payload["rag"]["citation_recall"] == 1.0
+
+
+def test_eval_agent_cli_computes_trace_metrics(tmp_path):
+    traces = tmp_path / "traces.jsonl"
+    expected = tmp_path / "expected.jsonl"
+    traces.write_text(
+        json.dumps(
+            {
+                "id": "a1",
+                "input": "find date",
+                "steps": [
+                    {"type": "tool_call", "tool": "search", "args": {"query": "date"}},
+                    {"type": "observation", "result": "April 16"},
+                    {"type": "final", "content": "April 16"},
+                ],
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    expected.write_text(
+        json.dumps(
+            {
+                "id": "a1",
+                "tool_schemas": {"search": {"required": ["query"]}},
+                "expected_state": {"done": True},
+                "actual_state": {"done": True},
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    out = tmp_path / "agent_report.json"
+
+    result = CliRunner().invoke(
+        app,
+        ["eval-agent", "--traces", str(traces), "--expected", str(expected), "--out", str(out)],
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(out.read_text(encoding="utf-8"))
+    assert payload["agent"]["tool_call_validity"] == 1.0
+    assert payload["agent"]["task_completion"] == 1.0
+
+
+def test_list_metric_references_cli():
+    result = CliRunner().invoke(app, ["list-metric-references", "--family", "rag", "--json"])
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert payload[0]["family"] == "rag"
+    assert "context_precision" in payload[0]["metric_names"]
+
+
+def test_reference_comparison_cli_writes_metric_reference_table(tmp_path):
+    qwen = tmp_path / "qwen.json"
+    mistral = tmp_path / "mistral.json"
+    qwen.write_text(
+        json.dumps(
+            {
+                "run": {"id": "qwen"},
+                "likelihood": {"status": "pass", "perplexity": 29.6},
+                "serving": {"status": "pass", "batch_mean_kl": 0.0},
+                "metric_references": {},
+            }
+        ),
+        encoding="utf-8",
+    )
+    mistral.write_text(
+        json.dumps(
+            {
+                "run": {"id": "mistral"},
+                "likelihood": {"status": "pass", "perplexity": 7.8},
+                "serving": {"status": "pass", "batch_mean_kl": 0.0},
+                "metric_references": {},
+            }
+        ),
+        encoding="utf-8",
+    )
+    out = tmp_path / "comparison.md"
+
+    result = CliRunner().invoke(
+        app,
+        [
+            "reference-comparison",
+            "--report",
+            f"Qwen={qwen}",
+            "--report",
+            f"Mistral={mistral}",
+            "--out",
+            str(out),
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    content = out.read_text(encoding="utf-8")
+    assert "perplexity" in content
+    assert "lm-evaluation-harness" in content
+    assert "29.6 (measured)" in content
+
+
+def test_reference_comparison_cli_writes_transposed_table(tmp_path):
+    report = tmp_path / "qwen.json"
+    report.write_text(
+        json.dumps(
+            {
+                "run": {"id": "qwen"},
+                "likelihood": {"status": "pass", "perplexity": 29.6},
+                "metric_references": {},
+            }
+        ),
+        encoding="utf-8",
+    )
+    out = tmp_path / "comparison_transposed.md"
+
+    result = CliRunner().invoke(
+        app,
+        [
+            "reference-comparison",
+            "--report",
+            f"Qwen={report}",
+            "--out",
+            str(out),
+            "--format",
+            "markdown-transposed",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    content = out.read_text(encoding="utf-8")
+    assert "# Metric Values" in content
+    assert "| Model | likelihood.nll | likelihood.perplexity |" in content
+    assert "# Metric References" in content
+
+
+def test_reference_comparison_cli_can_include_all_coverage_metrics(tmp_path):
+    report = tmp_path / "qwen.json"
+    report.write_text(
+        json.dumps(
+            {
+                "run": {"id": "qwen"},
+                "likelihood": {"status": "pass", "perplexity": 29.6, "num_tokens": 12},
+                "metric_coverage": {
+                    "entries": [
+                        {"section": "likelihood", "metric": "perplexity", "status": "measured"},
+                        {"section": "likelihood", "metric": "num_tokens", "status": "measured"},
+                    ]
+                },
+                "metric_references": {},
+            }
+        ),
+        encoding="utf-8",
+    )
+    out = tmp_path / "comparison_all.md"
+
+    result = CliRunner().invoke(
+        app,
+        [
+            "reference-comparison",
+            "--report",
+            f"Qwen={report}",
+            "--out",
+            str(out),
+            "--format",
+            "markdown-transposed",
+            "--all-metrics",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    content = out.read_text(encoding="utf-8")
+    assert "| Model | likelihood.perplexity | likelihood.num_tokens |" in content
+
+
+def test_reference_comparison_cli_writes_html_dashboard(tmp_path):
+    report = tmp_path / "qwen.json"
+    report.write_text(
+        json.dumps(
+            {
+                "run": {"id": "qwen"},
+                "likelihood": {"status": "pass", "perplexity": 29.6, "num_tokens": 12},
+                "serving": {"status": "warning", "batch_mean_kl": 0.1},
+                "metric_coverage": {
+                    "entries": [
+                        {"section": "likelihood", "metric": "perplexity", "status": "measured"},
+                        {"section": "likelihood", "metric": "num_tokens", "status": "measured"},
+                        {"section": "serving", "metric": "batch_mean_kl", "status": "measured"},
+                    ]
+                },
+                "metric_references": {},
+            }
+        ),
+        encoding="utf-8",
+    )
+    out = tmp_path / "comparison.html"
+
+    result = CliRunner().invoke(
+        app,
+        [
+            "reference-comparison",
+            "--report",
+            f"Qwen={report}",
+            "--out",
+            str(out),
+            "--format",
+            "html-dashboard",
+            "--all-metrics",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    content = out.read_text(encoding="utf-8")
+    assert "<!doctype html>" in content
+    assert "OVIQS Target Model Quality Dashboard" in content
+    assert "likelihood.perplexity" in content
+    assert "Report Paths" in content

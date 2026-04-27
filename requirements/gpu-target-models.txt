@@ -1,0 +1,7 @@
+# Extra dependencies for newest requested model families. Install `gpu.txt` first.
+# Then install this file and `gpu-transformers-main.txt` with `pip install --no-deps`
+# because current optimum-intel releases still pin Transformers below Qwen3.5.
+huggingface-hub>=1.5,<2
+mistral-common>=1.8.6
+Pillow>=10.0
+socksio>=1.0

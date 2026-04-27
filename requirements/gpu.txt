@@ -1,0 +1,16 @@
+# Runtime stack for real OpenVINO GPU metric runs.
+# Install this only inside the target GPU-machine venv, not on the local dev machine.
+
+openvino>=2025.0
+openvino-genai>=2025.0
+optimum-intel[openvino]>=1.20
+transformers>=4.40,<4.58
+accelerate>=0.30
+sentencepiece>=0.2
+safetensors>=0.4.3
+huggingface-hub>=0.34,<1
+datasets>=2.20,<5
+
+# Use CPU PyTorch for export/orchestration. OpenVINO runs the model on Intel GPU.
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.8.0+cpu; platform_system == "Linux" and platform_machine == "x86_64"
