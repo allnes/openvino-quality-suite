@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Any
 
 import numpy as np
 import typer
@@ -12,7 +12,7 @@ from rich.table import Table
 
 from oviqs.aggregation.buckets import aggregate_position_bucketed_ppl
 from oviqs.aggregation.gates import evaluate_gates
-from oviqs.core.report import EvaluationReport, ReportRun, ReportSummary, write_report
+from oviqs.core.report import EvaluationReport, ReportRun, ReportSummary, Status, write_report
 from oviqs.core.sample import EvalSample
 from oviqs.core.trace import AgentTrace, TraceStep
 from oviqs.datasets.jsonl import load_jsonl_samples, read_jsonl
@@ -559,14 +559,14 @@ def _build_logits_runner(backend: str, model: str, device: str):
     raise typer.BadParameter(f"Unsupported backend: {backend}")
 
 
-def _encode_for_runner(runner, text: str) -> dict[str, np.ndarray]:
+def _encode_for_runner(runner, text: str) -> dict[str, Any]:
     if hasattr(runner, "encode"):
         encoded = runner.encode(text)
         input_ids = encoded["input_ids"]
         attention_mask = encoded.get("attention_mask") if hasattr(encoded, "get") else None
         if hasattr(input_ids, "detach"):
             input_ids = input_ids.detach().cpu().numpy()
-        if hasattr(attention_mask, "detach"):
+        if attention_mask is not None and hasattr(attention_mask, "detach"):
             attention_mask = attention_mask.detach().cpu().numpy()
         return {
             "input_ids": np.asarray(input_ids),
@@ -737,7 +737,7 @@ def _safe_section(name: str, fn) -> dict:
         return {"status": "fail", "error": f"{name} failed: {exc}"}
 
 
-def _overall_status(statuses: list[str]) -> str:
+def _overall_status(statuses: list[str]) -> Status:
     if "fail" in statuses:
         return "fail"
     if "warning" in statuses:
@@ -974,7 +974,7 @@ def _compute_eval_rag_section(samples, answer_rows: list[dict], scorer: str) -> 
     judge_metrics = supported_claim_ratio_placeholder()
     if scorer != "placeholder":
         warnings.append(f"External RAG scorer {scorer!r} is not configured in this CLI run")
-    warnings.extend(judge_metrics.get("warnings", []))
+    warnings.extend(judge_metrics.get("warnings") or [])
     return {
         "evidence_coverage": _mean(evidence_values),
         "context_precision": _mean(precision_values),

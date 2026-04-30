@@ -20,12 +20,16 @@ class HFReferenceRunner(BaseLogitsRunner, BaseGenerationRunner):
         self.model_id_or_path = model_id_or_path
         self.device = device
         self.dtype = dtype
-        self.tokenizer = AutoTokenizer.from_pretrained(model_id_or_path, use_fast=True)
+        self.tokenizer = AutoTokenizer.from_pretrained(  # nosec B615
+            model_id_or_path, use_fast=True
+        )
         torch_dtype = (
             getattr(torch, dtype) if dtype in {"float16", "bfloat16", "float32"} else "auto"
         )
-        self.model = AutoModelForCausalLM.from_pretrained(model_id_or_path, torch_dtype=torch_dtype)
-        self.model.to(device)
+        self.model = AutoModelForCausalLM.from_pretrained(  # nosec B615
+            model_id_or_path, torch_dtype=torch_dtype
+        )
+        self.model.to(device)  # type: ignore[arg-type]
         self.model.eval()
 
     def run_info(self) -> dict:

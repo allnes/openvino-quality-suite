@@ -856,9 +856,7 @@ def agent_section() -> dict[str, Any]:
     schema = {"search": {"required": ["query"]}, "read_file": {"required": ["path"]}}
     traces = [success, recovery]
     validity = [tool_call_validity(trace, schema)["tool_call_validity"] for trace in traces]
-    redundancy = [
-        redundant_tool_call_rate(trace)["redundant_tool_call_rate"] for trace in traces
-    ]
+    redundancy = [redundant_tool_call_rate(trace)["redundant_tool_call_rate"] for trace in traces]
     grounding = [
         observation_grounding_score(trace)["observation_grounding_score"] for trace in traces
     ]

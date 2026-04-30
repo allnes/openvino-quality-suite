@@ -233,9 +233,7 @@ def text_target_nll(runner: OVRuntimeLogitsRunner, prefix: str, target: str) -> 
 def distractor_conflict_section(runner: OVRuntimeLogitsRunner) -> dict[str, Any]:
     clean_prefix = "The document states that the capital of France is"
     target = " Paris"
-    distractor_prefix = (
-        "A cooking recipe discusses salt, pepper, ovens, and bread. " + clean_prefix
-    )
+    distractor_prefix = "A cooking recipe discusses salt, pepper, ovens, and bread. " + clean_prefix
     conflict_prefix = (
         "The document states that the capital of France is Paris. "
         "A misleading note claims that the capital of France is Berlin. "

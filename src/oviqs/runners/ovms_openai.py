@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import time
 from urllib import request
+from urllib.parse import urlparse
 
 from oviqs.core.runner import BaseGenerationRunner
 from oviqs.core.types import GenerationOutput
@@ -13,6 +14,9 @@ class OVMSOpenAIRunner(BaseGenerationRunner):
 
     def __init__(self, base_url: str, model: str, timeout_s: float = 60.0) -> None:
         self.base_url = base_url.rstrip("/")
+        parsed = urlparse(self.base_url)
+        if parsed.scheme not in {"http", "https"}:
+            raise ValueError("OVMS base_url must use http or https")
         self.model = model
         self.timeout_s = timeout_s
 
@@ -29,7 +33,7 @@ class OVMSOpenAIRunner(BaseGenerationRunner):
             method="POST",
         )
         start = time.perf_counter()
-        with request.urlopen(req, timeout=self.timeout_s) as resp:
+        with request.urlopen(req, timeout=self.timeout_s) as resp:  # nosec B310
             body = json.loads(resp.read().decode("utf-8"))
         latency_ms = (time.perf_counter() - start) * 1000.0
         text = body.get("choices", [{}])[0].get("text", "")

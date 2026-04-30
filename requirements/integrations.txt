@@ -3,21 +3,21 @@
 # Proxy values are intentionally not documented here; configure them from the
 # execution environment.
 
-lm-eval[api]==0.4.11
-ragas==0.4.3
-deepeval==3.9.9
-openevals==0.2.0
 agentevals==0.0.9
 arize-phoenix==14.16.0
+deepeval==3.9.9
+fsspec==2025.9.0
+litellm==1.83.14
+lm-eval[api]==0.4.11
+openevals==0.2.0
 opik==2.0.18
+platformdirs==4.9.6
+propcache==0.4.1
+pyarrow==24.0.0
 
 # Resolver anchors for Phoenix/Opik/inspect-ai transitive stacks.
 pydantic-ai==1.62.0
 pydantic-ai-slim==1.62.0
 pydantic-evals==1.62.0
 pydantic-graph==1.62.0
-litellm==1.83.14
-pyarrow==24.0.0
-propcache==0.4.1
-platformdirs==4.9.6
-fsspec==2025.9.0
+ragas==0.4.3

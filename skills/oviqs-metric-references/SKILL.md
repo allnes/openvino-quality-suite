@@ -31,6 +31,8 @@ Read only what is needed:
    prose in the matching `docs/metric_details/<family>.md` file.
 7. Update reference comparison defaults when a metric should appear in cross-report tables.
 8. Update docs and tests when adding metric names, families or degradation rules.
+9. Keep metric docs compatible with markdownlint and public release hygiene; examples should
+   be generic and should not include generated reports or local machine details.
 
 ## Commands
 

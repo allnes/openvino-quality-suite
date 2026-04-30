@@ -168,7 +168,7 @@ class OVRuntimeLogitsRunner(BaseLogitsRunner):
         for state in states:
             state.reset()
 
-        outputs = []
+        outputs: list[np.ndarray] = []
         for pos in range(input_ids.shape[1] - 1):
             step_ids = input_ids[:, pos : pos + 1]
             step_embeds = self._embed_inputs(step_ids) if self._expects_inputs_embeds() else None
@@ -204,13 +204,13 @@ class OVRuntimeLogitsRunner(BaseLogitsRunner):
         if shapes:
             model.reshape(shapes)
         try:
-            self.compiled = self.core.compile_model(model, self.device, self.config)
+            compiled = self.core.compile_model(model, self.device, self.config)
         except RuntimeError as exc:
             raise RuntimeError(
-                f"Failed to compile OpenVINO model for device={self.device}, "
-                f"shapes={shapes}"
+                f"Failed to compile OpenVINO model for device={self.device}, shapes={shapes}"
             ) from exc
-        self.request = self.compiled.create_infer_request()
+        self.compiled = compiled
+        self.request = compiled.create_infer_request()
         self._compiled_shape_key = shape_key
 
     def _input_shapes(
@@ -256,13 +256,14 @@ class OVRuntimeLogitsRunner(BaseLogitsRunner):
             return None
         if self.embedding_compiled is None:
             embedding_model = self.core.read_model(str(self.embedding_model_xml))
-            self.embedding_compiled = self.core.compile_model(
+            embedding_compiled = self.core.compile_model(
                 embedding_model,
                 self.device,
                 self.config,
             )
-            self.embedding_request = self.embedding_compiled.create_infer_request()
-        if self.embedding_request is None:
+            self.embedding_compiled = embedding_compiled
+            self.embedding_request = embedding_compiled.create_infer_request()
+        if self.embedding_request is None or self.embedding_compiled is None:
             raise RuntimeError("OpenVINO text embeddings infer request was not initialized")
         input_name = self.embedding_compiled.inputs[0].get_any_name()
         outputs = self.embedding_request.infer({input_name: input_ids.astype(np.int64)})
@@ -359,7 +360,7 @@ def _load_tokenizer(tokenizer_dir: str):
     except ImportError as exc:
         raise OptionalDependencyError("transformers", "openvino") from exc
     try:
-        return AutoTokenizer.from_pretrained(tokenizer_dir, use_fast=True)
+        return AutoTokenizer.from_pretrained(tokenizer_dir, use_fast=True)  # nosec B615
     except ValueError:
         tokenizer_path = Path(tokenizer_dir) / "tokenizer.json"
         tokenizer_config_path = Path(tokenizer_dir) / "tokenizer_config.json"

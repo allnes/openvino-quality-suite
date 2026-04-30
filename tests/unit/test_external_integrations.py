@@ -91,6 +91,4 @@ def test_external_dataset_converters():
         helmet_row_to_sample({"id": "2", "prompt": "q", "documents": ["a"], "answer": "b"}).context
         == "a"
     )
-    assert (
-        ruler_row_to_sample({"id": "3", "input": "q", "outputs": ["needle"]}).target == "needle"
-    )
+    assert ruler_row_to_sample({"id": "3", "input": "q", "outputs": ["needle"]}).target == "needle"

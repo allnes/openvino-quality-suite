@@ -1,0 +1,223 @@
+name: Quality
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  PIP_NO_PYTHON_VERSION_WARNING: "1"
+
+jobs:
+  static-analysis:
+    name: Static analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install project and dev tooling
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Ruff lint
+        run: python -m ruff check .
+
+      - name: Ruff format check
+        run: python -m ruff format --check .
+
+      - name: Pre-commit hooks
+        run: python -m pre_commit run --all-files --show-diff-on-failure
+
+      - name: Python syntax compile
+        run: python -m compileall -q src tests scripts examples
+
+      - name: Mypy
+        run: python -m mypy src
+
+      - name: Pyright
+        run: pyright
+
+  dependency-health:
+    name: Dependency health
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install project and dependency tooling
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: UV lock is current
+        run: uv lock --locked
+
+      - name: Deptry dependency analysis
+        run: deptry src
+
+      - name: Pip dependency consistency
+        run: python -m pip check
+
+      - name: Dependency vulnerability audit
+        run: python -m pip_audit --skip-editable --ignore-vuln PYSEC-2022-42969
+
+  maintainability:
+    name: Maintainability
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install project and maintainability tooling
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Codespell
+        run: codespell
+
+      - name: Interrogate docstring coverage
+        run: interrogate src tests --quiet
+
+      - name: Pydoclint docstring consistency
+        run: pydoclint src tests --quiet
+
+      - name: Vulture dead-code scan
+        run: vulture src tests --min-confidence 100
+
+      - name: Radon complexity report
+        run: radon cc src tests -s -a
+
+      - name: Xenon complexity gate
+        run: xenon --max-absolute C --max-modules B --max-average B src tests
+
+  tests:
+    name: Tests / Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install project
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Pytest
+        run: python -m pytest -q
+
+  coverage:
+    name: Coverage gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install project
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Pytest coverage
+        run: |
+          python -m pytest \
+            --cov=oviqs \
+            --cov-report=term-missing \
+            --cov-report=xml \
+            --cov-fail-under=60 \
+            -q
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-xml
+          path: coverage.xml
+          if-no-files-found: ignore
+
+  security:
+    name: Security checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Gitleaks secret scan
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          args: detect --source . --no-git --redact --verbose
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install project and security tooling
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Bandit static security scan
+        run: python -m bandit -r src -ll -ii
+
+  package:
+    name: Package build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install build tooling
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Pip dependency consistency
+        run: python -m pip check
+
+      - name: Build source and wheel distributions
+        run: |
+          rm -rf dist
+          python -m build
+
+      - name: Validate package metadata
+        run: python -m twine check dist/*
+
+      - name: Install built wheel smoke test
+        shell: bash
+        run: |
+          python -m pip install --force-reinstall dist/*.whl
+          oviq --help >/dev/null

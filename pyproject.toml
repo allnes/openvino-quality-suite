@@ -34,7 +34,27 @@ rag = ["ragas>=0.2"]
 agent = ["deepeval>=2.0", "openevals>=0.0.1", "agentevals>=0.0.1"]
 observability = ["arize-phoenix>=7.0", "opik>=1.0"]
 plots = ["matplotlib>=3.8"]
-dev = ["pytest>=8.0", "pytest-cov>=5.0", "ruff>=0.5", "mypy>=1.10"]
+dev = [
+  "pytest>=8.0",
+  "pytest-cov>=5.0",
+  "ruff>=0.5",
+  "mypy>=1.10",
+  "types-PyYAML>=6.0",
+  "build>=1.2",
+  "twine>=6.0",
+  "bandit>=1.8",
+  "pip-audit>=2.8",
+  "pre-commit>=4.0",
+  "pyright>=1.1",
+  "deptry>=0.23",
+  "codespell>=2.3",
+  "interrogate>=1.7",
+  "pydoclint>=0.6",
+  "vulture>=2.14",
+  "radon>=6.0",
+  "xenon>=0.9",
+  "uv>=0.5",
+]
 
 [project.scripts]
 oviq = "oviqs.cli:app"
@@ -60,3 +80,65 @@ select = ["E", "F", "I", "B", "UP", "SIM"]
 python_version = "3.10"
 strict = false
 ignore_missing_imports = true
+
+[tool.pyright]
+include = ["src", "tests"]
+exclude = ["**/__pycache__", ".venv", "build", "dist"]
+pythonVersion = "3.10"
+typeCheckingMode = "basic"
+reportMissingImports = false
+reportMissingTypeStubs = false
+reportPrivateImportUsage = false
+
+[tool.coverage.run]
+source = ["oviqs"]
+
+[tool.coverage.report]
+fail_under = 60
+show_missing = true
+skip_empty = true
+
+[tool.deptry]
+extend_exclude = ["build", "dist", "reports", "models", "data", "datasets"]
+known_first_party = ["oviqs"]
+optional_dependencies_dev_groups = ["dev"]
+
+[tool.deptry.per_rule_ignores]
+DEP001 = [
+  "datasets",
+  "opencompass",
+  "phoenix",
+]
+DEP002 = [
+  "agentevals",
+  "arize-phoenix",
+  "matplotlib",
+  "pandas",
+]
+
+[tool.codespell]
+skip = ".git,.venv,build,dist,reports,models,cache,data,datasets,artifacts,outputs,logs,*.egg-info"
+ignore-words-list = "nd,ot,rouge"
+
+[tool.interrogate]
+ignore-init-method = true
+ignore-init-module = true
+ignore-magic = true
+ignore-module = true
+ignore-nested-functions = true
+ignore-private = true
+fail-under = 0
+exclude = ["build", "dist", ".venv"]
+
+[tool.pydoclint]
+style = "google"
+exclude = '\.venv|build|dist'
+allow-init-docstring = true
+check-return-types = false
+check-yield-types = false
+
+[tool.vulture]
+paths = ["src", "tests"]
+min_confidence = 100
+sort_by_size = true
+exclude = ["build", "dist", ".venv"]

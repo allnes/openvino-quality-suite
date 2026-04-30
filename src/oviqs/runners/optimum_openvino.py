@@ -18,7 +18,7 @@ class OptimumOVLogitsRunner(BaseLogitsRunner, BaseGenerationRunner):
         self.torch = torch
         self.model_dir = model_dir
         self.device = device
-        self.tokenizer = AutoTokenizer.from_pretrained(model_dir, use_fast=True)
+        self.tokenizer = AutoTokenizer.from_pretrained(model_dir, use_fast=True)  # nosec B615
         self.model = OVModelForCausalLM.from_pretrained(model_dir, device=device)
         self.model.eval()
 

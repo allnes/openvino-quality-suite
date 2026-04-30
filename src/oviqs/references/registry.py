@@ -293,8 +293,7 @@ _REFERENCES: tuple[MetricReference, ...] = (
             "explicit judge rubric."
         ),
         degradation_rule=(
-            "Degraded when deterministic checks fail or judge/semantic score drops "
-            "below the gate."
+            "Degraded when deterministic checks fail or judge/semantic score drops below the gate."
         ),
         required_inputs=("output text", "expected structure/entities/rubric"),
     ),
@@ -366,8 +365,7 @@ _REFERENCES: tuple[MetricReference, ...] = (
             "against explicit ground truth."
         ),
         degradation_rule=(
-            "Degraded when retrieval, grounding, answer or citation score falls below "
-            "its gate."
+            "Degraded when retrieval, grounding, answer or citation score falls below its gate."
         ),
         required_inputs=(
             "question",
@@ -402,8 +400,7 @@ _REFERENCES: tuple[MetricReference, ...] = (
             "scenarios against labels or fixtures."
         ),
         degradation_rule=(
-            "Degraded when tool/state/grounding/task/recovery score violates its "
-            "configured gate."
+            "Degraded when tool/state/grounding/task/recovery score violates its configured gate."
         ),
         required_inputs=(
             "agent trace",
@@ -435,9 +432,7 @@ _REFERENCES: tuple[MetricReference, ...] = (
 
 
 _BY_METRIC: dict[str, MetricReference] = {
-    metric_name: reference
-    for reference in _REFERENCES
-    for metric_name in reference.metric_names
+    metric_name: reference for reference in _REFERENCES for metric_name in reference.metric_names
 }
 
 

@@ -58,9 +58,7 @@ SECTION_DESCRIPTIONS = {
         "Serving correctness under batching and cached decode. The same prompt should keep "
         "stable logits and generated prefixes."
     ),
-    "rag": (
-        "Retrieval and grounding checks with labeled evidence, citations and answer support."
-    ),
+    "rag": ("Retrieval and grounding checks with labeled evidence, citations and answer support."),
     "agent": (
         "Trace-level checks for tool calls, state, recovery, grounding and policy constraints."
     ),
@@ -540,9 +538,9 @@ def _metric_html(row: dict[str, Any], labels: list[str]) -> str:
           <div class="details-body">
             <div>
               <h3>Reference</h3>
-              <p><strong>Primary:</strong> {_h(row.get('reference') or 'n/a')}</p>
+              <p><strong>Primary:</strong> {_h(row.get("reference") or "n/a")}</p>
               <p><strong>Oracle:</strong> {_h(oracle)}</p>
-              <p><strong>Degradation:</strong> {_h(row.get('degradation_rule') or 'n/a')}</p>
+              <p><strong>Degradation:</strong> {_h(row.get("degradation_rule") or "n/a")}</p>
               {sources}
             </div>
             <div>
@@ -620,7 +618,7 @@ def _reference_columns(
     reports: list[tuple[str, dict[str, Any], str]],
     section: str,
     metric: str,
-) -> dict[str, str]:
+) -> dict[str, Any]:
     for _label, report, _path in reports:
         reference = find_metric_reference(report, section, metric)
         if reference:

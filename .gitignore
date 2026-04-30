@@ -3,6 +3,9 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
+.coverage
+coverage.xml
+htmlcov/
 *.egg-info/
 dist/
 build/
@@ -30,17 +33,17 @@ build/
 *.kubeconfig
 credentials.json
 token.json
-devices/
+/devices/
 
 # Local datasets, downloaded models and generated evaluation artifacts.
-reports/
+/reports/
 /models/
-cache/
-data/
-datasets/
-artifacts/
-outputs/
-logs/
+/cache/
+/data/
+/datasets/
+/artifacts/
+/outputs/
+/logs/
 *.onnx
 *.pt
 *.pth

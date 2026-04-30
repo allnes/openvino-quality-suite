@@ -24,7 +24,8 @@ Use this skill for code and documentation changes in this repository.
    behavior, adapters and CLI behavior affected by the change.
 9. Update `docs/metric_playbook.md` and the matching `docs/metric_details/*.md` file when
    adding or renaming a reported metric.
-10. Run checks from the virtual environment.
+10. Keep CI and packaging metadata current when dependencies or validation tooling change.
+11. Run checks from the virtual environment.
 
 ## Validation
 
@@ -33,10 +34,15 @@ Prefer the narrowest checks that cover the change:
 ```bash
 .venv/bin/pytest tests/unit
 .venv/bin/ruff check .
+.venv/bin/ruff format --check .
 ```
 
 Run integration or OpenVINO-specific tests only when the required models, devices and
 extras are available.
+
+For release-facing changes, also run the relevant CI-equivalent checks when available:
+`pre-commit run --all-files`, `mypy src`, `pyright`, `pip check`, `pip-audit`, `bandit -r src`
+and `python -m build`.
 
 ## Design guardrails
 
@@ -49,3 +55,7 @@ extras are available.
   command is a scorecard-style workflow.
 - Missing optional evaluators should produce omitted or `unknown` metrics, not fake scores.
 - Report JSON must remain stable enough for CI gates and downstream rendering.
+- Generated reports, model exports, datasets, logs, caches, local environment files and
+  operator notes must stay out of commits.
+- Security suppressions such as `# nosec` should be narrow and explain intentional external
+  model or endpoint loading behavior.

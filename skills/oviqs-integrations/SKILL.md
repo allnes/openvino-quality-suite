@@ -26,6 +26,10 @@ Read only what is needed:
 4. Prefer Python APIs or explicit report importers. Do not launch external CLIs implicitly.
 5. Use dataset converters to normalize benchmark rows into `EvalSample`.
 6. Keep proxy credentials, evaluator service credentials and generated result files out of git.
+7. Keep `requirements/integrations.txt`, `requirements/lighteval.txt`, `pyproject.toml`
+   extras and `uv.lock` aligned when dependency pins change.
+8. Run `pip check`, `deptry` or targeted adapter tests after dependency or import-boundary
+   changes.
 
 ## Install Notes
 

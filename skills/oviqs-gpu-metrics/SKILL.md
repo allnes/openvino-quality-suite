@@ -37,6 +37,8 @@ Read only what is needed:
    families.
 9. Use `oviq reference-comparison` to compare standard matrix reports across target models.
 10. Store generated reports under ignored `reports/` or remote workspace report paths.
+11. Keep `uv.lock`, requirements files and CI docs aligned when GPU or evaluator
+    dependencies change.
 
 ## Guardrails
 
@@ -46,6 +48,8 @@ Read only what is needed:
   status and the exact fallback model or artifact.
 - Keep judge-backed RAG and agent metrics `unknown` unless an explicit scorer ran.
 - Treat OpenVINO GPU compile errors as failed section results that need investigation.
+- Keep local device inventories and raw GPU reports out of commits; publish sanitized
+  summaries in docs only when they are reproducible from public configs.
 
 ## Commands
 

@@ -6,12 +6,9 @@ while larger and long-context models are reserved for scheduled or explicit qual
 
 Sources checked on 2026-04-27:
 
-- OpenVINO GenAI supported models:
-  https://openvinotoolkit.github.io/openvino.genai/docs/supported-models/
-- OpenVINO GenAI inference guide:
-  https://docs.openvino.ai/2025/openvino-workflow-generative/inference-with-genai.html
-- OpenVINO GenAI Python text-generation samples:
-  https://openvinotoolkit.github.io/openvino.genai/docs/samples/python/text_generation/
+- [OpenVINO GenAI supported models](https://openvinotoolkit.github.io/openvino.genai/docs/supported-models/)
+- [OpenVINO GenAI inference guide](https://docs.openvino.ai/2025/openvino-workflow-generative/inference-with-genai.html)
+- [OpenVINO GenAI Python text-generation samples](https://openvinotoolkit.github.io/openvino.genai/docs/samples/python/text_generation/)
 
 ## Rules
 

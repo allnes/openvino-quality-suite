@@ -21,3 +21,7 @@ OVIQS work. They are project assets, not runtime package code.
 - Put only `SKILL.md` and directly useful bundled resources under a skill directory.
 - Do not add generated reports, virtual environments, caches or model artifacts to skills.
 - Update skills when CLI commands, report sections, runner names or validation rules change.
+- Update skills when CI checks, dependency files, runner contracts or public release
+  hygiene rules change.
+- Keep skill examples generic and public-safe; do not encode local machine paths,
+  credentials, private inventory or generated report payloads.
