@@ -27,6 +27,18 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
+          cache-dependency-path: |
+            pyproject.toml
+            uv.lock
+            requirements/*.txt
+
+      - name: Cache pre-commit environments
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
+          restore-keys: |
+            pre-commit-${{ runner.os }}-
 
       - name: Install project and dev tooling
         run: |
@@ -60,6 +72,18 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
+          cache-dependency-path: |
+            pyproject.toml
+            uv.lock
+            requirements/*.txt
+
+      - name: Cache uv resolver data
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: uv-${{ runner.os }}-${{ hashFiles('uv.lock') }}
+          restore-keys: |
+            uv-${{ runner.os }}-
 
       - name: Install project and dependency tooling
         run: |
@@ -87,6 +111,10 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
+          cache-dependency-path: |
+            pyproject.toml
+            uv.lock
+            requirements/*.txt
 
       - name: Install project and maintainability tooling
         run: |
@@ -124,6 +152,10 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
+          cache-dependency-path: |
+            pyproject.toml
+            uv.lock
+            requirements/*.txt
 
       - name: Install project
         run: |
@@ -142,6 +174,10 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
+          cache-dependency-path: |
+            pyproject.toml
+            uv.lock
+            requirements/*.txt
 
       - name: Install project
         run: |
@@ -181,6 +217,10 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
+          cache-dependency-path: |
+            pyproject.toml
+            uv.lock
+            requirements/*.txt
 
       - name: Install project and security tooling
         run: |
@@ -199,6 +239,10 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
+          cache-dependency-path: |
+            pyproject.toml
+            uv.lock
+            requirements/*.txt
 
       - name: Install build tooling
         run: |

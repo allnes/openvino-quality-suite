@@ -102,6 +102,7 @@ skip_empty = true
 extend_exclude = ["build", "dist", "reports", "models", "data", "datasets"]
 known_first_party = ["oviqs"]
 optional_dependencies_dev_groups = ["dev"]
+package_module_name_map = { "optimum-intel" = ["optimum"] }
 
 [tool.deptry.per_rule_ignores]
 DEP001 = [
