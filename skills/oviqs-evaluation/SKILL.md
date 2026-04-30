@@ -11,8 +11,8 @@ Use this skill for hands-on evaluation runs in this repository.
 
 1. Read `README.md`, `docs/usage.md`, `docs/data_formats.md` and
    `docs/reports_and_gates.md` only as needed.
-2. Use the project virtual environment for Python commands: `.venv/bin/python`,
-   `.venv/bin/pytest`, `.venv/bin/ruff`, `.venv/bin/pre-commit` or `.venv/bin/oviq`.
+2. Use `uv run ...` for quality-gated commands and `.venv/bin/...` only when working in an
+   already-created local environment.
 3. Choose the backend:
    - `dummy` for deterministic local checks.
    - `hf` for reference logits.
@@ -55,5 +55,5 @@ Use this skill for hands-on evaluation runs in this repository.
 .venv/bin/oviq compare --baseline /tmp/likelihood.json --current /tmp/likelihood.json --gates configs/gates/default_gates.yaml --out /tmp/comparison.json
 .venv/bin/oviq render-report --report /tmp/likelihood.json --out /tmp/likelihood.md
 .venv/bin/oviq reference-comparison --report baseline=/tmp/baseline.json --report current=/tmp/current.json --format markdown-transposed --out /tmp/reference_comparison.md
-.venv/bin/pre-commit run --all-files
+uv run pre-commit run --all-files --show-diff-on-failure
 ```

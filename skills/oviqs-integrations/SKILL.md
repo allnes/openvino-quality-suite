@@ -28,13 +28,15 @@ Read only what is needed:
 6. Keep proxy credentials, evaluator service credentials and generated result files out of git.
 7. Keep `requirements/integrations.txt`, `requirements/lighteval.txt`, `pyproject.toml`
    extras and `uv.lock` aligned when dependency pins change.
-8. Run `pip check`, `deptry` or targeted adapter tests after dependency or import-boundary
-   changes.
+8. Run targeted adapter tests while iterating, then the unified `uv run pre-commit
+   run --all-files --show-diff-on-failure` gate for release-facing dependency or
+   import-boundary changes.
 
 ## Install Notes
 
 ```bash
-.venv/bin/python -m pip install -r requirements/integrations.txt
+uv sync --extra dev
+uv run python -m pip install -r requirements/integrations.txt
 python -m venv .venv-lighteval
 .venv-lighteval/bin/python -m pip install -r requirements/lighteval.txt
 ```

@@ -25,24 +25,29 @@ Use this skill for code and documentation changes in this repository.
 9. Update `docs/metric_playbook.md` and the matching `docs/metric_details/*.md` file when
    adding or renaming a reported metric.
 10. Keep CI and packaging metadata current when dependencies or validation tooling change.
-11. Run checks from the virtual environment.
+11. Run the unified quality gate with `uv run pre-commit run --all-files`.
 
 ## Validation
 
-Prefer the narrowest checks that cover the change:
+Prefer the narrowest checks while iterating:
 
 ```bash
-.venv/bin/pytest tests/unit
-.venv/bin/ruff check .
-.venv/bin/ruff format --check .
+uv run ruff check .
+uv run ruff format --check .
+uv run pytest tests/unit
 ```
 
 Run integration or OpenVINO-specific tests only when the required models, devices and
 extras are available.
 
-For release-facing changes, also run the relevant CI-equivalent checks when available:
-`pre-commit run --all-files`, `mypy src`, `pyright`, `pip check`, `pip-audit`, `bandit -r src`
-and `python -m build`.
+For release-facing changes, run the same gate CI uses:
+
+```bash
+uv run pre-commit run --all-files --show-diff-on-failure
+```
+
+The package build, wheel install smoke test, `import oviqs` and `oviq --help` checks live in
+`scripts/quality/package_smoke.py`.
 
 ## Design guardrails
 

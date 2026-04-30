@@ -1,47 +1,283 @@
-default_language_version:
-  python: python3
+minimum_pre_commit_version: "4.0.0"
 
-exclude: ^(\.venv|dist|build|reports|models|cache|data|datasets|artifacts|outputs|logs)/
+default_language_version:
+  python: python3.12
+
+default_stages: [pre-commit]
+
+fail_fast: false
+
+exclude: ^(\.venv|dist|build|reports|models|cache|data|datasets|artifacts|outputs|logs|.*\.egg-info)/
 
 repos:
+  # ============================================================
+  # 01. FILE HYGIENE
+  # ============================================================
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       - id: trailing-whitespace
+        name: files / trailing whitespace
         types_or: [python, yaml, toml, markdown, shell, text]
-      - id: end-of-file-fixer
-        types_or: [python, yaml, toml, markdown, shell, text]
-      - id: mixed-line-ending
-        args: [--fix=lf]
-        types_or: [python, yaml, toml, markdown, shell, text]
-      - id: check-yaml
-      - id: check-toml
-      - id: check-json
-      - id: check-merge-conflict
-      - id: check-case-conflict
-      - id: check-added-large-files
-        args: [--maxkb=1024]
-      - id: check-executables-have-shebangs
-      - id: check-shebang-scripts-are-executable
-      - id: debug-statements
-      - id: detect-private-key
-      - id: requirements-txt-fixer
 
+      - id: end-of-file-fixer
+        name: files / end of file fixer
+        types_or: [python, yaml, toml, markdown, shell, text]
+
+      - id: mixed-line-ending
+        name: files / mixed line endings
+        args: ["--fix=lf"]
+        types_or: [python, yaml, toml, markdown, shell, text]
+
+      - id: check-added-large-files
+        name: files / check added large files
+        args: ["--maxkb=1024"]
+
+      - id: check-case-conflict
+        name: files / check case conflict
+
+      - id: check-merge-conflict
+        name: files / check merge conflict
+
+      - id: check-symlinks
+        name: files / check symlinks
+
+      - id: destroyed-symlinks
+        name: files / destroyed symlinks
+
+      - id: check-executables-have-shebangs
+        name: files / executables have shebangs
+
+      - id: check-shebang-scripts-are-executable
+        name: files / shebang scripts are executable
+
+      - id: requirements-txt-fixer
+        name: files / requirements.txt fixer
+
+  # ============================================================
+  # 02. SYNTAX AND CONFIG VALIDATION
+  # ============================================================
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-ast
+        name: syntax / python ast
+
+      - id: check-json
+        name: syntax / json
+
+      - id: check-toml
+        name: syntax / toml
+
+      - id: check-yaml
+        name: syntax / yaml
+        args: ["--allow-multiple-documents"]
+
+      - id: check-xml
+        name: syntax / xml
+
+  # ============================================================
+  # 03. DEBUG AND PRIVATE KEY CHECKS
+  # ============================================================
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: debug-statements
+        name: debug / python debug statements
+
+      - id: detect-private-key
+        name: security / detect private key
+
+  # ============================================================
+  # 04. UV LOCK VALIDATION
+  # ============================================================
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 0.11.8
+    hooks:
+      - id: uv-lock
+        name: uv / lock file is up to date
+
+  # ============================================================
+  # 05. RUFF LINT AND FORMAT
+  #
+  # Keep lint before format.
+  # ============================================================
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.15.12
     hooks:
       - id: ruff
-        args: [--fix]
-      - id: ruff-format
+        name: ruff / lint and autofix
+        args: ["--fix"]
 
+      - id: ruff-format
+        name: ruff / format
+
+  # ============================================================
+  # 06. SHELLCHECK
+  # ============================================================
   - repo: https://github.com/shellcheck-py/shellcheck-py
     rev: v0.11.0.1
     hooks:
       - id: shellcheck
+        name: shell / shellcheck
         types: [shell]
 
+  # ============================================================
+  # 07. MARKDOWNLINT
+  # ============================================================
   - repo: https://github.com/DavidAnson/markdownlint-cli2
     rev: v0.18.1
     hooks:
       - id: markdownlint-cli2
+        name: docs / markdownlint-cli2
         types: [markdown]
+
+  # ============================================================
+  # 08. PROJECT QUALITY CHECKS THROUGH UV
+  #
+  # These hooks run in the actual project environment.
+  # ============================================================
+  - repo: local
+    hooks:
+      # ========================================================
+      # 08.01. PYTHON COMPILE CHECK
+      # ========================================================
+      - id: python-compileall
+        name: python / compileall
+        entry: uv run python -m compileall -q src tests scripts examples
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      # ========================================================
+      # 08.02. TYPE CHECKING
+      # ========================================================
+      - id: type-mypy
+        name: type / mypy
+        entry: uv run mypy src tests
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: type-pyright
+        name: type / pyright
+        entry: uv run pyright
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      # ========================================================
+      # 08.03. TESTS AND COVERAGE
+      # ========================================================
+      - id: tests-pytest
+        name: tests / pytest
+        entry: uv run pytest -q
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: tests-coverage
+        name: tests / coverage
+        entry: >
+          uv run pytest
+          --cov=oviqs
+          --cov-report=term-missing
+          --cov-report=xml
+          --cov-fail-under=60
+          -q
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      # ========================================================
+      # 08.04. DEPENDENCY QUALITY
+      # ========================================================
+      - id: deps-deptry
+        name: deps / deptry
+        entry: uv run deptry src
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: deps-pip-check
+        name: deps / pip check
+        entry: uv run python -m pip check
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      # PYSEC-2022-42969 comes from interrogate -> py and is kept as the current baseline.
+      - id: deps-pip-audit
+        name: deps / pip-audit
+        entry: uv run python -m pip_audit --skip-editable --ignore-vuln PYSEC-2022-42969
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      # ========================================================
+      # 08.05. SECURITY STATIC ANALYSIS
+      # ========================================================
+      - id: security-bandit
+        name: security / bandit
+        entry: uv run python -m bandit -r src -ll -ii
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      # ========================================================
+      # 08.06. DOCUMENTATION QUALITY
+      # ========================================================
+      - id: docs-codespell
+        name: docs / codespell
+        entry: uv run codespell
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: docs-interrogate
+        name: docs / interrogate
+        entry: uv run interrogate src tests --quiet
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: docs-pydoclint
+        name: docs / pydoclint
+        entry: uv run pydoclint src tests --quiet
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      # ========================================================
+      # 08.07. MAINTAINABILITY
+      # ========================================================
+      - id: maintainability-vulture
+        name: maintainability / vulture
+        entry: uv run vulture src tests --min-confidence 100
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: maintainability-radon
+        name: maintainability / radon complexity report
+        entry: uv run radon cc src tests -s -a
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: maintainability-xenon
+        name: maintainability / xenon complexity gate
+        entry: uv run xenon --max-absolute C --max-modules B --max-average B src tests
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      # ========================================================
+      # 08.08. PACKAGE BUILD AND INSTALL SMOKE TEST
+      # ========================================================
+      - id: package-build-and-smoke
+        name: package / build, twine check, wheel smoke
+        entry: uv run python scripts/quality/package_smoke.py
+        language: system
+        pass_filenames: false
+        always_run: true
