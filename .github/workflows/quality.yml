@@ -37,7 +37,36 @@ jobs:
         run: uv sync --extra dev
 
       - name: Run full pre-commit suite
-        run: uv run pre-commit run --all-files --show-diff-on-failure
+        run: |
+          set -o pipefail
+          uv run pre-commit run --all-files --show-diff-on-failure 2>&1 | tee precommit.log
+
+      - name: Upload pre-commit log
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: precommit-log
+          path: precommit.log
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-xml
+          path: coverage.xml
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Upload package distributions
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: package-dist
+          path: dist/*
+          if-no-files-found: ignore
+          retention-days: 14
 
   tests-matrix:
     name: Tests / Python ${{ matrix.python-version }}

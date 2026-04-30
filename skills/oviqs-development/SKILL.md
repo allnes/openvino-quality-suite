@@ -26,6 +26,10 @@ Use this skill for code and documentation changes in this repository.
    adding or renaming a reported metric.
 10. Keep CI and packaging metadata current when dependencies or validation tooling change.
 11. Run the unified quality gate with `uv run pre-commit run --all-files`.
+12. When editing CI, keep diagnostic uploads limited to generated public-safe artifacts such
+    as pre-commit logs, coverage XML and package distributions; keep local paths and
+    operator notes out of committed docs and skills, and use short retention for
+    diagnostic-only artifacts.
 
 ## Validation
 
@@ -62,5 +66,7 @@ The package build, wheel install smoke test, `import oviqs` and `oviq --help` ch
 - Report JSON must remain stable enough for CI gates and downstream rendering.
 - Generated reports, model exports, datasets, logs, caches, local environment files and
   operator notes must stay out of commits.
+- CI artifacts are for workflow diagnosis and release packaging only; never make generated
+  artifacts part of the tracked source tree.
 - Security suppressions such as `# nosec` should be narrow and explain intentional external
   model or endpoint loading behavior.

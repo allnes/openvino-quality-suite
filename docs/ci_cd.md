@@ -15,7 +15,8 @@ Run OpenVINO tests only in environments with exported models and configured devi
 ## Workflow Jobs
 
 - Full pre-commit quality gate: installs with `uv`, syncs the `dev` extra and runs every
-  hook from `.pre-commit-config.yaml`.
+  hook from `.pre-commit-config.yaml`. The job captures the combined pre-commit output in
+  `precommit.log` for failure diagnosis.
 - Python compatibility matrix: runs `pytest -q` on Python 3.10, 3.11 and 3.12 after the
   full quality gate passes.
 
@@ -37,6 +38,16 @@ The package build smoke test is implemented in `scripts/quality/package_smoke.py
 pre-commit hook stays deterministic and short.
 
 ## Artifacts
+
+The quality job uploads three diagnostic artifacts with `if-no-files-found: ignore`:
+
+- `precommit-log`: the captured `precommit.log` from the full pre-commit suite;
+- `coverage-xml`: `coverage.xml` when the coverage hook produced it;
+- `package-dist`: files under `dist/*` from the package build smoke test.
+
+These artifacts are retained for 14 days and are CI diagnostics only. Treat them as
+generated output: inspect them when a workflow fails, but do not add them to source control
+or reference local machine paths in docs, skills or examples.
 
 Do not commit generated reports, model exports, local datasets, logs, coverage files,
 build outputs or caches; those paths are ignored for local and CI output.
