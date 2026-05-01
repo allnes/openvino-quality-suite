@@ -1,0 +1,8 @@
+profile: ci
+defaults:
+  device: CPU
+  backend: dummy
+quality_gates:
+  require_metric_reference: true
+  require_degradation_oracle: true
+  fail_on_unknown_required_metric: true

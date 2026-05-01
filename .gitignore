@@ -59,6 +59,8 @@ token.json
 .codex/
 .claude/
 .cursor/
+codex/
 CODEX_WORKING_RULES.md
 OVIQS_Codex_Agent_Implementation_Guide.md
+codex-*.md
 codex_*.md

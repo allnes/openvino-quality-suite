@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package oviqs.evaluation.v1;
+
+message EvaluationRequest {
+  string run_id = 1;
+  string suite = 2;
+  string model = 3;
+  string backend = 4;
+  string device = 5;
+  string dataset_uri = 6;
+}
+
+message MetricValue {
+  string name = 1;
+  double value = 2;
+  string status = 3;
+  string reference = 4;
+}
+
+message EvaluationResponse {
+  string run_id = 1;
+  string overall_status = 2;
+  repeated MetricValue metrics = 3;
+  string report_uri = 4;
+}
+
+service EvaluationWorker {
+  rpc Evaluate(EvaluationRequest) returns (EvaluationResponse);
+}

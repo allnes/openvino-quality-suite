@@ -36,22 +36,22 @@ non-distilled checkpoint or official compressed weight format when one is availa
 | Mistral | `mistralai/Ministral-3-3B-Instruct-2512` | official FP8, INT4 OpenVINO export if conversion supports it | Smallest Ministral 3 family model; non-distilled post-trained checkpoint. |
 | Gemma 3 | `google/gemma-3-1b-it` | INT4 OpenVINO export | Smallest Gemma 3 instruction checkpoint. |
 
-## Current Validated GPU Model
+## Validated Entry-Level GPU Model
 
-The current target GPU machine exposes only Intel UHD Graphics 770. On that device, the
-validated non-toy model for end-to-end OVIQS metric verification is:
+For entry-level Intel integrated GPU validation, the validated non-toy model for
+end-to-end OVIQS metric verification is:
 
 | Model | Export | Result |
 |---|---|---|
 | `openai-community/gpt2` | `text-generation` FP16 for logits, `text-generation-with-past` FP16 for GenAI | Passes likelihood, drift, long-context mechanics, serving batch drift and generation metrics on GPU. |
 
-Use this model when validating OVIQS behavior on the current GPU server. The larger target
-families remain useful compatibility targets, but they currently fail before producing
-numeric GPU quality metrics on this hardware/software stack.
+Use this model when validating OVIQS behavior on constrained GPU targets. The larger target
+families remain useful compatibility targets, but they can fail before producing numeric
+GPU quality metrics on smaller hardware/software stacks.
 
 The extended GPT-2 validation run also downloads WikiText-2 validation samples and writes
-`reports/target-models/gpt2_extended_gpu_metrics.json`. On the current Intel UHD Graphics
-770 GPU it passes all implemented sections:
+`reports/target-models/gpt2_extended_gpu_metrics.json`. On an entry-level Intel integrated
+GPU target it passes all implemented sections:
 
 - WikiText-2 likelihood: NLL `3.6784854078497498`, PPL `39.58639140657846`
 - CPU/GPU drift: mean KL `0.003599317201102773`, p95 KL `0.008398092041412989`, top-10 overlap `0.9663901909348929`

@@ -159,6 +159,17 @@ Run a suite scaffold from YAML:
 oviq run-suite --config configs/default.yaml --out /tmp/suite.json
 ```
 
+Environment profile files live under `configs/`:
+
+- `configs/base.yaml`: shared report and gate defaults.
+- `configs/local.yaml`: local CPU/dummy defaults.
+- `configs/ci.yaml`: CI defaults with strict unknown-metric handling.
+- `configs/gpu.yaml`: OpenVINO Runtime GPU defaults.
+- `configs/prod.yaml`: production report defaults with strict gate policy.
+
+Keep these profiles public-safe. Do not commit machine paths, credentials, proxy settings,
+private device inventories or generated report payloads into profile YAML.
+
 Evaluate gates:
 
 ```bash
@@ -203,3 +214,17 @@ Use `--all-metrics` to include every metric listed in report coverage, or
 
 Use `/tmp`, CI artifact directories or the ignored local `reports/` path for generated
 outputs. Do not commit generated model artifacts, caches or reports.
+
+## Programmatic interfaces
+
+The console script still resolves to `oviqs.cli:app`, which now re-exports the Typer app
+from `oviqs.interfaces.cli`. Programmatic callers should prefer the layered modules:
+
+- `oviqs.application.dto.requests` for request DTOs;
+- `oviqs.application.services` for report-building use cases;
+- `oviqs.platform.bootstrap.build_default_container` for default port/adapters wiring;
+- `oviqs.interfaces.http.create_app()` for the optional HTTP interface;
+- `oviqs.interfaces.grpc` for request/response mappers and worker service contracts.
+
+Runner, dataset and reporter plugins can be exposed through Python entry-point groups
+`oviqs.runners`, `oviqs.datasets` and `oviqs.reporters`.

@@ -7,7 +7,7 @@ model_matrix:
         size: 124m
         minimal_weight_format: fp16
         non_distilled: true
-        note: "Validated on the current Intel UHD 770 GPU target with OpenVINO Runtime logits metrics and OpenVINO GenAI generation."
+        note: "Validated on an entry-level Intel integrated GPU target with OpenVINO Runtime logits metrics and OpenVINO GenAI generation."
         metrics:
           - likelihood
           - distribution_drift

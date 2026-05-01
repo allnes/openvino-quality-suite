@@ -59,6 +59,16 @@ dev = [
 [project.scripts]
 oviq = "oviqs.cli:app"
 
+[project.entry-points."oviqs.runners"]
+dummy = "oviqs.adapters.runners.dummy:DummyLogitsRunner"
+
+[project.entry-points."oviqs.datasets"]
+jsonl = "oviqs.adapters.datasets:JsonlDatasetAdapter"
+
+[project.entry-points."oviqs.reporters"]
+json = "oviqs.adapters.reporting:JsonReportAdapter"
+markdown = "oviqs.adapters.reporting:MarkdownReportRenderer"
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/oviqs"]
 

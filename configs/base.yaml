@@ -1,0 +1,8 @@
+profile: base
+defaults:
+  suite: openvino_llm_quality_v1
+  report_format: json
+  missing_metric_status: unknown
+quality_gates:
+  require_metric_reference: true
+  require_degradation_oracle: true

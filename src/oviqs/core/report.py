@@ -26,6 +26,7 @@ class ReportSummary(BaseModel):
 
 
 class EvaluationReport(BaseModel):
+    schema_version: str = "openvino_llm_quality_v1"
     run: ReportRun
     summary: ReportSummary = Field(default_factory=ReportSummary)
     inference_equivalence: dict[str, Any] = Field(default_factory=dict)
@@ -47,6 +48,7 @@ def write_report(report: EvaluationReport | dict[str, Any], path: str | Path) ->
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     payload = report.model_dump(mode="json") if isinstance(report, EvaluationReport) else report
+    payload.setdefault("schema_version", "openvino_llm_quality_v1")
     if not payload.get("metric_references"):
         from oviqs.references import build_report_reference_manifest
 

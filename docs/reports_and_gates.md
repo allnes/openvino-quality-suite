@@ -6,6 +6,7 @@ Every CLI evaluation command writes a JSON report compatible with `EvaluationRep
 
 Top-level fields:
 
+- `schema_version`: report contract version, currently `openvino_llm_quality_v1`.
 - `run`: run metadata such as `id`, `suite`, `model`, `reference`, `current`, `device`,
   `precision` and `created_at`.
 - `summary`: `overall_status` plus human-readable `main_findings`.
@@ -22,6 +23,11 @@ Top-level fields:
 - `metric_references`: reference/oracle metadata for scalar metrics found in the report.
 - `reproducibility`: seeds, versions, model hashes and environment notes.
 - `raw_sample_metrics_uri`: optional pointer to detailed sample-level metrics.
+
+The external JSON report envelope is also described by
+`src/oviqs/contracts/jsonschema/evaluation_report.schema.json`. The schema fixes the
+required envelope fields and allows additional metric-section properties so compatible
+consumers can accept newly registered scalar metrics.
 
 ## Status values
 

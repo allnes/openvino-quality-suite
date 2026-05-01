@@ -4,7 +4,7 @@ from typing import Any
 
 from oviqs.references import get_metric_reference
 
-StatusOrder = {"pass": 0, "unknown": 1, "warning": 2, "fail": 3}
+StatusOrder = {"pass": 0, "unknown": 1, "warning": 2, "fail": 3}  # nosec B105
 
 
 def evaluate_gates(

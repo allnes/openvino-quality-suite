@@ -16,17 +16,23 @@ Use this skill for code and documentation changes in this repository.
 4. Update docs and examples when public CLI flags, runner names, data formats, report
    sections or gate semantics change.
 5. Keep `src/oviqs/models` tracked; `/models/` is the ignored generated artifact root.
-6. Keep optional integrations lazy. Shared behavior belongs in `oviqs.integrations.base`;
-   adapter modules should return `IntegrationResult` and avoid implicit subprocess calls.
-7. Register new gateable scalar metrics in `oviqs.references`; reports and gates rely on
+6. Keep the layered boundaries intact: interfaces call application services, application
+   code depends on domain and ports, and concrete runner/dataset/report implementations
+   stay in adapters or legacy compatibility modules.
+7. Keep optional integrations lazy. Shared evaluator behavior belongs in
+   `oviqs.integrations.base`; infrastructure adapters live under `oviqs.adapters` and
+   should satisfy ports without importing optional extras until used.
+8. Register new gateable scalar metrics in `oviqs.references`; reports and gates rely on
    reference/oracle metadata to decide whether a metric is quality-gate ready.
-8. Add focused tests for metric math, schemas, gates, metric references, model-matrix
-   behavior, adapters and CLI behavior affected by the change.
-9. Update `docs/metric_playbook.md` and the matching `docs/metric_details/*.md` file when
+9. Add focused tests for metric math, schemas, gates, metric references, model-matrix
+   behavior, adapters, architecture boundaries and CLI behavior affected by the change.
+10. Update `docs/metric_playbook.md` and the matching `docs/metric_details/*.md` file when
    adding or renaming a reported metric.
-10. Keep CI and packaging metadata current when dependencies or validation tooling change.
-11. Run the unified quality gate with `uv run pre-commit run --all-files`.
-12. When editing CI, keep diagnostic uploads limited to generated public-safe artifacts such
+11. Keep architecture, usage, contract and skills docs current when package layout, entry
+    points, profiles, ports or public interfaces change.
+12. Keep CI and packaging metadata current when dependencies or validation tooling change.
+13. Run the unified quality gate with `uv run pre-commit run --all-files`.
+14. When editing CI, keep diagnostic uploads limited to generated public-safe artifacts such
     as pre-commit logs, coverage XML and package distributions; keep local paths and
     operator notes out of committed docs and skills, and use short retention for
     diagnostic-only artifacts.
@@ -57,6 +63,8 @@ The package build, wheel install smoke test, `import oviqs` and `oviq --help` ch
 
 - Metrics should operate on normalized arrays, reports or traces, not on backend-specific objects.
 - Runner adapters should translate framework outputs into OVIQS core contracts.
+- New delivery surfaces should add a port or interface before coupling application services
+  to concrete infrastructure.
 - RAG, agent, serving and long-context CLI commands should compute rule-based metrics when
   inputs are available and keep judge/stateful-only metrics explicit when unavailable.
 - Gate evaluation should leave missing or unreferenced metrics as `unknown`.

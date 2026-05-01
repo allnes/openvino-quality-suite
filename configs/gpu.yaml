@@ -1,0 +1,7 @@
+profile: gpu
+defaults:
+  device: GPU
+  backend: openvino-runtime
+quality_gates:
+  require_metric_reference: true
+  require_degradation_oracle: true

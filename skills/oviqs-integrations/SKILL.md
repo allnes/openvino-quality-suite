@@ -15,6 +15,8 @@ Read only what is needed:
 - `requirements/integrations.txt` for shared evaluator dependencies.
 - `requirements/lighteval.txt` for the separate LightEval environment.
 - `src/oviqs/integrations/base.py` for shared result normalization.
+- `src/oviqs/ports/*.py` for public adapter protocols.
+- `src/oviqs/adapters/plugins/entrypoints.py` for Python entry-point plugin discovery.
 - `tests/unit/test_external_integrations.py` for adapter contract examples.
 
 ## Workflow
@@ -26,9 +28,12 @@ Read only what is needed:
 4. Prefer Python APIs or explicit report importers. Do not launch external CLIs implicitly.
 5. Use dataset converters to normalize benchmark rows into `EvalSample`.
 6. Keep proxy credentials, evaluator service credentials and generated result files out of git.
-7. Keep `requirements/integrations.txt`, `requirements/lighteval.txt`, `pyproject.toml`
+7. When exposing an adapter as a package plugin, use the relevant entry-point group
+   (`oviqs.runners`, `oviqs.datasets` or `oviqs.reporters`) and keep import-time optional
+   dependencies lazy.
+8. Keep `requirements/integrations.txt`, `requirements/lighteval.txt`, `pyproject.toml`
    extras and `uv.lock` aligned when dependency pins change.
-8. Run targeted adapter tests while iterating, then the unified `uv run pre-commit
+9. Run targeted adapter tests while iterating, then the unified `uv run pre-commit
    run --all-files --show-diff-on-failure` gate for release-facing dependency or
    import-boundary changes.
 

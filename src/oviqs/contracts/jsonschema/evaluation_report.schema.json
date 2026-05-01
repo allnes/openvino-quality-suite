@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/allnes/openvino-quality-suite/blob/main/src/oviqs/contracts/jsonschema/evaluation_report.schema.json",
+  "title": "OVIQS Evaluation Report",
+  "type": "object",
+  "required": ["schema_version", "run", "summary"],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "run": {
+      "type": "object",
+      "required": ["id", "suite", "created_at"],
+      "properties": {
+        "id": { "type": "string" },
+        "suite": { "type": "string" },
+        "model": { "type": ["string", "null"] },
+        "reference": { "type": ["string", "null"] },
+        "current": { "type": ["string", "null"] },
+        "device": { "type": ["string", "null"] },
+        "precision": { "type": ["string", "null"] },
+        "created_at": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "summary": {
+      "type": "object",
+      "required": ["overall_status"],
+      "properties": {
+        "overall_status": {
+          "type": "string",
+          "enum": ["pass", "warning", "fail", "unknown"]
+        },
+        "main_findings": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": true
+    },
+    "metric_references": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}
