@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from oviqs.metrics.serving import generation_prefix_divergence, kv_cache_drift
+from oviqs.domain.metrics.serving import generation_prefix_divergence, kv_cache_drift
 
 
 def test_generation_prefix_divergence():

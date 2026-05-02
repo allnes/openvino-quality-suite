@@ -1,5 +1,5 @@
-from oviqs.metrics.distribution_drift import aggregate_drift, distribution_drift
-from oviqs.runners.dummy import DummyLogitsRunner
+from oviqs.adapters.runners.dummy import DummyLogitsRunner
+from oviqs.domain.metrics.distribution_drift import aggregate_drift, distribution_drift
 
 ids = [[1, 2, 3, 4]]
 ref = DummyLogitsRunner(correct_bias=5.0).forward_logits(ids)[:, :-1, :]

@@ -1,5 +1,5 @@
-from oviqs.core.trace import AgentTrace, TraceStep
-from oviqs.metrics.agent import redundant_tool_call_rate
+from oviqs.domain.metrics.agent import redundant_tool_call_rate
+from oviqs.domain.traces import AgentTrace, TraceStep
 
 trace = AgentTrace(
     id="t1",

@@ -25,6 +25,7 @@ from oviqs.application.services.catalogs import (
 from oviqs.application.services.catalogs import (
     list_metric_reference_catalog as list_metric_references_from_catalog,
 )
+from oviqs.application.services.compare_reports import compare_reports
 from oviqs.application.services.evaluate_agent import build_agent_report
 from oviqs.application.services.evaluate_drift import build_drift_report
 from oviqs.application.services.evaluate_gpu_suite import build_gpu_suite_report
@@ -38,12 +39,11 @@ from oviqs.application.services.metric_tools import (
     distractor_sensitivity,
     lost_in_middle_from_json,
 )
-from oviqs.application.services.reports import (
-    compare_reports,
+from oviqs.application.services.render_report import (
     render_report_to_path,
     write_reference_comparison_table,
-    write_suite_scaffold_report,
 )
+from oviqs.application.services.run_suite import write_suite_scaffold_report
 from oviqs.platform.bootstrap import build_default_container
 
 app = typer.Typer(help="OVIQS: OpenVINO Inference Quality Suite")

@@ -27,7 +27,7 @@ pair these checks with task labels or external evaluators.
 
 ## OVIQS Implementation
 
-Source: `src/oviqs/metrics/generation.py`.
+Source: `src/oviqs/domain/metrics/generation.py`.
 
 Current built-in functions:
 

@@ -3,14 +3,9 @@ from __future__ import annotations
 from importlib import import_module
 from typing import Any
 
-from oviqs.application.dto.requests import GpuSuiteRequest, LikelihoodEvaluationRequest
-from oviqs.application.services.evaluations import build_gpu_suite_report, build_likelihood_report
-from oviqs.interfaces.http.schemas import (
-    GpuSuiteRunRequest,
-    HealthResponse,
-    LikelihoodRunRequest,
-    ReportResponse,
-)
+from oviqs.interfaces.http.routes_datasets import build_datasets_router
+from oviqs.interfaces.http.routes_models import build_models_router
+from oviqs.interfaces.http.routes_runs import build_runs_router
 from oviqs.platform.bootstrap import build_default_container
 
 
@@ -25,38 +20,8 @@ def create_app() -> Any:
 
     app = fastapi.FastAPI(title="OVIQS", version="0.1.0")
     container = build_default_container()
-
-    @app.get("/health", response_model=HealthResponse)
-    def health() -> HealthResponse:
-        return HealthResponse()
-
-    @app.post("/runs/likelihood", response_model=ReportResponse)
-    def run_likelihood(request: LikelihoodRunRequest) -> ReportResponse:
-        report = build_likelihood_report(
-            LikelihoodEvaluationRequest(**request.model_dump()),
-            container.runner_factory,
-            container.dataset_reader,
-        )
-        container.report_writer.write(report, request.out)
-        return _response(report.model_dump(mode="json"))
-
-    @app.post("/runs/gpu-suite", response_model=ReportResponse)
-    def run_gpu_suite(request: GpuSuiteRunRequest) -> ReportResponse:
-        report = build_gpu_suite_report(
-            GpuSuiteRequest(**request.model_dump()),
-            container.runner_factory,
-            container.generation_runner_factory,
-            container.dataset_reader,
-        )
-        container.report_writer.write(report, request.out)
-        return _response(report.model_dump(mode="json"))
+    app.include_router(build_runs_router(fastapi, container))
+    app.include_router(build_models_router(fastapi, container))
+    app.include_router(build_datasets_router(fastapi, container))
 
     return app
-
-
-def _response(report: dict[str, Any]) -> ReportResponse:
-    return ReportResponse(
-        run_id=str(report.get("run", {}).get("id", "")),
-        overall_status=str(report.get("summary", {}).get("overall_status", "unknown")),
-        report=report,
-    )

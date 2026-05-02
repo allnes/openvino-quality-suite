@@ -84,7 +84,7 @@ that exposes logits.
 - Serving: batch invariance and KV-cache drift interfaces.
 
 Every scalar metric intended for reporting or gating should have a registered
-reference/oracle in `oviqs.references`. Reports include a `metric_references` manifest,
+reference/oracle in `oviqs.domain.references`. Reports include a `metric_references` manifest,
 and gates treat unreferenced metrics as `unknown`.
 
 ```bash

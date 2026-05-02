@@ -1,5 +1,5 @@
-from oviqs.metrics.likelihood import nll_ppl_from_logits
-from oviqs.runners.dummy import DummyLogitsRunner
+from oviqs.adapters.runners.dummy import DummyLogitsRunner
+from oviqs.domain.metrics.likelihood import nll_ppl_from_logits
 
 runner = DummyLogitsRunner()
 encoded = {"input_ids": [[1, 2, 3, 4]], "attention_mask": [[1, 1, 1, 1]]}

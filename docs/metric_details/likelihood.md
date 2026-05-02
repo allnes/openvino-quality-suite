@@ -40,7 +40,7 @@ per-sample or per-token perplexities gives a biased number because `exp` is nonl
 
 ## OVIQS Implementation
 
-Source: `src/oviqs/metrics/likelihood.py`.
+Source: `src/oviqs/domain/metrics/likelihood.py`.
 
 Required inputs:
 

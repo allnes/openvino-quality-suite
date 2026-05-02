@@ -13,14 +13,9 @@ from typing import Any
 import numpy as np
 from datasets import load_dataset
 
-from oviqs.aggregation.buckets import (
-    aggregate_position_bucketed_ppl,
-    effective_context_bucket,
-    sample_length_bucket,
-)
-from oviqs.core.report import write_report
-from oviqs.core.trace import AgentTrace, TraceStep
-from oviqs.metrics.agent import (
+from oviqs.adapters.runners.ov_genai import OVGenAIRunner
+from oviqs.adapters.runners.ov_runtime import OVRuntimeLogitsRunner
+from oviqs.domain.metrics.agent import (
     agent_state_drift,
     observation_grounding_score,
     policy_violation_rate,
@@ -29,28 +24,31 @@ from oviqs.metrics.agent import (
     task_completion,
     tool_call_validity,
 )
-from oviqs.metrics.distribution_drift import (
+from oviqs.domain.metrics.distribution_drift import (
     aggregate_drift,
     distribution_drift,
     top1_changed_rate,
     topk_overlap,
 )
-from oviqs.metrics.generation import json_validity, ngram_repetition_rate
-from oviqs.metrics.likelihood import (
+from oviqs.domain.metrics.generation import json_validity, ngram_repetition_rate
+from oviqs.domain.metrics.likelihood import (
     nll_ppl_from_logits,
     sliding_window_ppl,
     token_logprobs_from_logits,
 )
-from oviqs.metrics.long_context import (
+from oviqs.domain.metrics.long_context import (
+    aggregate_position_bucketed_ppl,
     authoritative_margin,
     conflict_entropy,
     context_gain,
     context_saturation_curve,
     degradation_slope,
     distractor_sensitivity,
+    effective_context_bucket,
     lost_in_middle_score_from_ppl,
+    sample_length_bucket,
 )
-from oviqs.metrics.rag import (
+from oviqs.domain.metrics.rag import (
     citation_metrics,
     context_precision,
     context_recall,
@@ -58,10 +56,10 @@ from oviqs.metrics.rag import (
     evidence_coverage,
     rule_based_faithfulness,
 )
-from oviqs.metrics.serving import batch_invariance_drift, kv_cache_drift
-from oviqs.references import get_metric_reference
-from oviqs.runners.openvino_genai import OVGenAIRunner
-from oviqs.runners.openvino_runtime import OVRuntimeLogitsRunner
+from oviqs.domain.metrics.serving import batch_invariance_drift, kv_cache_drift
+from oviqs.domain.references import get_metric_reference
+from oviqs.domain.reports import write_report
+from oviqs.domain.traces import AgentTrace, TraceStep
 
 GUIDE_METRICS: dict[str, list[str]] = {
     "likelihood": [

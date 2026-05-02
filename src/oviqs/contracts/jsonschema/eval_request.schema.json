@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/allnes/openvino-quality-suite/blob/main/src/oviqs/contracts/jsonschema/eval_request.schema.json",
+  "title": "OVIQS Evaluation Request",
+  "type": "object",
+  "required": ["model", "dataset", "out"],
+  "properties": {
+    "model": { "type": "string", "minLength": 1 },
+    "dataset": { "type": "string", "minLength": 1 },
+    "out": { "type": "string", "minLength": 1 },
+    "backend": { "type": "string", "default": "dummy" },
+    "device": { "type": "string", "default": "CPU" },
+    "window_size": { "type": "integer", "minimum": 1, "default": 4096 },
+    "stride": { "type": "integer", "minimum": 1, "default": 1024 },
+    "labels": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    }
+  },
+  "additionalProperties": true
+}

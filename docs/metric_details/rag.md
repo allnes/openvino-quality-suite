@@ -26,7 +26,7 @@ external scorer is configured.
 
 ## OVIQS Implementation
 
-Source: `src/oviqs/metrics/rag.py`.
+Source: `src/oviqs/domain/metrics/rag.py`.
 
 Core functions:
 

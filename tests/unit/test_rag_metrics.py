@@ -1,4 +1,4 @@
-from oviqs.metrics.rag import (
+from oviqs.domain.metrics.rag import (
     citation_metrics,
     context_precision,
     context_recall,

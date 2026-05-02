@@ -2,9 +2,9 @@ from pathlib import Path
 
 import pytest
 
-from oviqs.core.report import EvaluationReport, ReportRun, write_report
-from oviqs.core.sample import EvalSample, TokenizedSample
-from oviqs.core.trace import AgentTrace, TraceStep
+from oviqs.domain.reports import EvaluationReport, ReportRun, write_report
+from oviqs.domain.samples import EvalSample, TokenizedSample
+from oviqs.domain.traces import AgentTrace, TraceStep
 
 
 def test_eval_sample_schema():

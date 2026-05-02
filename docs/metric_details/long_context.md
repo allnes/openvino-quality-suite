@@ -34,7 +34,7 @@ Positive gain means the extra context helped. Negative gain means it hurt.
 
 ## OVIQS Implementation
 
-Source: `src/oviqs/metrics/long_context.py`.
+Source: `src/oviqs/domain/metrics/long_context.py`.
 
 Core functions:
 

@@ -31,7 +31,7 @@ answer accuracy alone:
 
 ## OVIQS Implementation
 
-Source: `src/oviqs/metrics/agent.py`.
+Source: `src/oviqs/domain/metrics/agent.py`.
 
 Required inputs:
 

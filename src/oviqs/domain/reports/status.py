@@ -1,5 +1,7 @@
 from __future__ import annotations
 
-from oviqs.core.report import Status
+from typing import Literal
+
+Status = Literal["pass", "warning", "fail", "unknown"]
 
 __all__ = ["Status"]

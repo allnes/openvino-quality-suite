@@ -35,7 +35,7 @@ prefix_divergence_rate = 1 - prefix_match_tokens / max(len(a), len(b), 1)
 
 ## OVIQS Implementation
 
-Source: `src/oviqs/metrics/serving.py`.
+Source: `src/oviqs/domain/metrics/serving.py`.
 
 Core functions:
 

@@ -1,5 +1,4 @@
-from oviqs.core.trace import AgentTrace, TraceStep
-from oviqs.metrics.agent import (
+from oviqs.domain.metrics.agent import (
     agent_state_drift,
     observation_grounding_score,
     policy_violation_rate,
@@ -8,6 +7,7 @@ from oviqs.metrics.agent import (
     task_completion,
     tool_call_validity,
 )
+from oviqs.domain.traces import AgentTrace, TraceStep
 
 
 def test_redundant_tool_call_rate():

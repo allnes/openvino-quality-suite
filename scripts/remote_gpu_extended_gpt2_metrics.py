@@ -11,18 +11,23 @@ import numpy as np
 from datasets import load_dataset
 from scipy.special import softmax
 
-from oviqs.aggregation.buckets import aggregate_position_bucketed_ppl
-from oviqs.core.trace import AgentTrace, TraceStep
-from oviqs.metrics.agent import agent_state_drift, redundant_tool_call_rate, tool_call_validity
-from oviqs.metrics.distribution_drift import (
+from oviqs.adapters.runners.ov_genai import OVGenAIRunner
+from oviqs.adapters.runners.ov_runtime import OVRuntimeLogitsRunner
+from oviqs.domain.metrics.agent import (
+    agent_state_drift,
+    redundant_tool_call_rate,
+    tool_call_validity,
+)
+from oviqs.domain.metrics.distribution_drift import (
     aggregate_drift,
     distribution_drift,
     top1_changed_rate,
     topk_overlap,
 )
-from oviqs.metrics.generation import json_validity, ngram_repetition_rate
-from oviqs.metrics.likelihood import nll_ppl_from_logits, sliding_window_ppl
-from oviqs.metrics.long_context import (
+from oviqs.domain.metrics.generation import json_validity, ngram_repetition_rate
+from oviqs.domain.metrics.likelihood import nll_ppl_from_logits, sliding_window_ppl
+from oviqs.domain.metrics.long_context import (
+    aggregate_position_bucketed_ppl,
     authoritative_margin,
     context_gain,
     context_saturation_curve,
@@ -30,10 +35,9 @@ from oviqs.metrics.long_context import (
     distractor_sensitivity,
     lost_in_middle_score_from_ppl,
 )
-from oviqs.metrics.rag import evidence_coverage
-from oviqs.metrics.serving import batch_invariance_drift
-from oviqs.runners.openvino_genai import OVGenAIRunner
-from oviqs.runners.openvino_runtime import OVRuntimeLogitsRunner
+from oviqs.domain.metrics.rag import evidence_coverage
+from oviqs.domain.metrics.serving import batch_invariance_drift
+from oviqs.domain.traces import AgentTrace, TraceStep
 
 
 def main() -> None:

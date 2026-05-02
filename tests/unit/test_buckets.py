@@ -1,12 +1,12 @@
 import pytest
 
-from oviqs.aggregation.buckets import (
+from oviqs.domain.metrics.long_context import (
     aggregate_position_bucketed_ppl,
     effective_context_bucket,
+    lost_in_middle_score_from_ppl,
     relative_position_bucket,
     sample_length_bucket,
 )
-from oviqs.metrics.long_context import lost_in_middle_score_from_ppl
 
 
 def test_length_buckets():

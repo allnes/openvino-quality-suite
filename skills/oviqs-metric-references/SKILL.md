@@ -11,18 +11,17 @@ Use this skill when a metric is added to reports, gates or standard metric matri
 
 Read only what is needed:
 
-- `src/oviqs/references/registry.py` for the reference catalog.
+- `src/oviqs/domain/references/catalog.py` for the reference catalog.
 - `docs/metrics.md` for reference/oracle policy.
 - `docs/metric_playbook.md` and `docs/metric_details/*.md` for per-metric descriptions.
 - `docs/reports_and_gates.md` for manifest and gate behavior.
-- `src/oviqs/reporting/reference_comparison.py` and
-  `src/oviqs/adapters/reporting/reference_comparison.py` for cross-report comparison output.
+- `src/oviqs/adapters/reporting/reference_comparison.py` for cross-report comparison output.
 - `tests/unit/test_metric_references.py` for catalog contract tests.
 - `tests/unit/test_gates.py` for reference-aware gate behavior.
 
 ## Workflow
 
-1. Register every gateable scalar metric in `oviqs.references`.
+1. Register every gateable scalar metric in `oviqs.domain.references`.
 2. Provide a primary reference, concrete sources, an oracle and a degradation rule.
 3. Keep report writers automatic: `write_report` should populate `metric_references`.
 4. Keep gates conservative: missing values and unreferenced metrics should be `unknown`.

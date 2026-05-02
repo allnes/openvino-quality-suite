@@ -1,6 +1,6 @@
 import pytest
 
-from oviqs.metrics.long_context import (
+from oviqs.domain.metrics.long_context import (
     authoritative_margin,
     conflict_entropy,
     conflict_sensitivity,

@@ -1,23 +1,143 @@
 from __future__ import annotations
 
-from oviqs.aggregation.buckets import aggregate_position_bucketed_ppl
-from oviqs.metrics.long_context import (
-    authoritative_margin,
-    conflict_entropy,
-    conflict_sensitivity,
-    context_gain,
-    degradation_slope,
-    distractor_sensitivity,
-    lost_in_middle_score_from_ppl,
-)
+from collections import defaultdict
 
-__all__ = [
-    "aggregate_position_bucketed_ppl",
-    "authoritative_margin",
-    "conflict_entropy",
-    "conflict_sensitivity",
-    "context_gain",
-    "degradation_slope",
-    "distractor_sensitivity",
-    "lost_in_middle_score_from_ppl",
-]
+import numpy as np
+
+
+def context_gain(nll_by_context: dict[str, float], baseline_key: str = "0k") -> dict[str, float]:
+    base = nll_by_context[baseline_key]
+    return {k: float(base - v) for k, v in nll_by_context.items() if k != baseline_key}
+
+
+def context_saturation_curve(
+    nll_by_context: dict[int, float], baseline_length: int = 0
+) -> dict[str, dict]:
+    base = nll_by_context[baseline_length]
+    return {
+        str(length): {
+            "nll": float(nll),
+            "ppl": float(np.exp(nll)),
+            "context_gain": float(base - nll),
+        }
+        for length, nll in sorted(nll_by_context.items())
+        if length != baseline_length
+    }
+
+
+def lost_in_middle_score_from_ppl(position_bucketed_ppl: dict[str, float]) -> float:
+    edges = np.mean([position_bucketed_ppl["0_10"], position_bucketed_ppl["90_100"]])
+    middle = np.mean([position_bucketed_ppl["30_50"], position_bucketed_ppl["50_70"]])
+    return float(middle / max(edges, 1e-12) - 1.0)
+
+
+def lost_in_middle_score_from_quality(position_score: dict[str, float]) -> float:
+    edges = np.mean([position_score["0_10"], position_score["90_100"]])
+    middle = np.mean([position_score["30_50"], position_score["50_70"]])
+    return float(1.0 - middle / max(edges, 1e-12))
+
+
+def degradation_slope(length_to_quality: dict[int, float]) -> float:
+    if len(length_to_quality) < 2:
+        raise ValueError("degradation_slope requires at least two lengths")
+    xs = [np.log2(length) for length in length_to_quality]
+    ys = list(length_to_quality.values())
+    slope, _intercept = np.polyfit(xs, ys, deg=1)
+    return float(slope)
+
+
+def distractor_sensitivity(nll_clean: float, nll_distracted: float) -> float:
+    return float(nll_distracted - nll_clean)
+
+
+def conflict_sensitivity(nll_clean: float, nll_conflicted: float) -> float:
+    """Return the NLL increase caused by conflicting context.
+
+    Positive values mean the conflict made the target less likely. Negative values are
+    possible when the model overfits to the conflicting setup or the supplied target is
+    easier under the conflicted prompt.
+    """
+
+    return float(nll_conflicted - nll_clean)
+
+
+def authoritative_margin(candidate_logprobs: dict[str, float], authoritative_key: str) -> float:
+    authoritative = candidate_logprobs[authoritative_key]
+    conflicting = [v for k, v in candidate_logprobs.items() if k != authoritative_key]
+    if not conflicting:
+        raise ValueError("Need at least one conflicting candidate")
+    return float(authoritative - max(conflicting))
+
+
+def conflict_entropy(candidate_logprobs: dict[str, float]) -> float:
+    """Entropy over candidate answer probabilities in a conflict test.
+
+    Higher entropy means the model is less decisive among candidate answers. Inputs are
+    log-probabilities for mutually exclusive candidate answers.
+    """
+
+    if not candidate_logprobs:
+        raise ValueError("conflict_entropy requires at least one candidate")
+    values = np.asarray(list(candidate_logprobs.values()), dtype=np.float64)
+    values = values - np.max(values)
+    probs = np.exp(values)
+    probs = probs / np.sum(probs)
+    return float(-np.sum(probs * np.log(np.maximum(probs, 1e-12))))
+
+
+def sample_length_bucket(num_tokens: int) -> str:
+    if num_tokens <= 4096:
+        return "0_4k"
+    if num_tokens <= 16384:
+        return "4_16k"
+    if num_tokens <= 32768:
+        return "16_32k"
+    if num_tokens <= 65536:
+        return "32_64k"
+    if num_tokens <= 131072:
+        return "64_128k"
+    return "128k_plus"
+
+
+def effective_context_bucket(left_context_tokens: int) -> str:
+    if left_context_tokens <= 1024:
+        return "ctx_0_1k"
+    if left_context_tokens <= 4096:
+        return "ctx_1_4k"
+    if left_context_tokens <= 16384:
+        return "ctx_4_16k"
+    if left_context_tokens <= 32768:
+        return "ctx_16_32k"
+    if left_context_tokens <= 65536:
+        return "ctx_32_64k"
+    return "ctx_64k_plus"
+
+
+def relative_position_bucket(pos: int, seq_len: int) -> str:
+    r = pos / max(seq_len - 1, 1)
+    if r < 0.10:
+        return "0_10"
+    if r < 0.30:
+        return "10_30"
+    if r < 0.50:
+        return "30_50"
+    if r < 0.70:
+        return "50_70"
+    if r < 0.90:
+        return "70_90"
+    return "90_100"
+
+
+def aggregate_position_bucketed_ppl(per_token: list[dict], seq_len: int) -> dict[str, dict]:
+    buckets: dict[str, list[float]] = defaultdict(list)
+    for item in per_token:
+        bucket = relative_position_bucket(int(item["absolute_pos"]), seq_len)
+        buckets[bucket].append(float(item["nll"]))
+    return {
+        bucket: {
+            "nll": float(np.mean(values)),
+            "ppl": float(np.exp(np.mean(values))),
+            "tokens": len(values),
+        }
+        for bucket, values in buckets.items()
+    }

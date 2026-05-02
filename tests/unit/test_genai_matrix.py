@@ -3,8 +3,9 @@ from pathlib import Path
 
 from typer.testing import CliRunner
 
+from oviqs.application.services.catalogs import load_genai_model_matrix
 from oviqs.cli import app
-from oviqs.models.genai_matrix import export_plan, load_genai_model_matrix, sanitize_model_name
+from oviqs.domain.models import export_plan, sanitize_model_name
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MATRIX_PATH = REPO_ROOT / "configs/examples/genai_metric_models.yaml"

@@ -1,12 +1,12 @@
 import json
 
-from oviqs.core.report import EvaluationReport, ReportRun, write_report
-from oviqs.references import (
+from oviqs.domain.references import (
     build_report_reference_manifest,
     get_metric_reference,
     list_metric_references,
     require_metric_reference,
 )
+from oviqs.domain.reports import EvaluationReport, ReportRun, write_report
 
 
 def test_key_metrics_have_degradation_references():

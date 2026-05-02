@@ -1,30 +1,33 @@
 # Integrations
 
-Optional integrations are implemented as lazy Python adapters for LightEval,
-lm-evaluation-harness, OpenCompass, Ragas, DeepEval, Phoenix, Opik, OpenEvals,
-agentevals and promptfoo result import.
+Optional integrations are implemented under `oviqs.adapters.integrations` as lazy Python
+adapters for LightEval, lm-evaluation-harness, OpenCompass, Ragas, DeepEval, Phoenix,
+Opik, OpenEvals, agentevals and promptfoo result import.
 
 ## Current adapter surfaces
 
-- `base.py`: shared `IntegrationResult`, optional dependency handling and callable
-  execution normalization.
-- `lighteval_adapter.py`: native Python pipeline adapter using `pipeline.evaluate(...)`
+- `src/oviqs/adapters/integrations/base.py`: shared `IntegrationResult`, optional dependency
+  handling and callable execution normalization.
+- `src/oviqs/adapters/integrations/lighteval_adapter.py`: native Python pipeline adapter using `pipeline.evaluate(...)`
   or `pipeline.run(...)`.
-- `lm_eval_adapter.py`: native `lm_eval.simple_evaluate(...)` wrapper.
-- `opencompass_adapter.py`: native callable runner boundary and JSON report importer.
-- `ragas_adapter.py`: Ragas dataset row builder and `ragas.evaluate(...)` wrapper.
-- `deepeval_adapter.py`: `LLMTestCase` builder and `deepeval.evaluate(...)` wrapper.
-- `phoenix_adapter.py` and `opik_adapter.py`: agent trace to span conversion plus
-  Python client export adapters.
-- `openevals_adapter.py`: OpenEvals/agentevals callable evaluator adapters.
-- `promptfoo_adapter.py`: promptfoo JSON result importer and explicit Python callable
+- `src/oviqs/adapters/integrations/lm_eval_adapter.py`: native `lm_eval.simple_evaluate(...)`
+  wrapper.
+- `src/oviqs/adapters/integrations/opencompass_adapter.py`: native callable runner boundary and
+  JSON report importer.
+- `src/oviqs/adapters/integrations/ragas_adapter.py`: Ragas dataset row builder and `ragas.evaluate(...)` wrapper.
+- `src/oviqs/adapters/integrations/deepeval_adapter.py`: `LLMTestCase` builder and `deepeval.evaluate(...)` wrapper.
+- `src/oviqs/adapters/integrations/phoenix_adapter.py` and
+  `src/oviqs/adapters/integrations/opik_adapter.py`: agent trace to span conversion plus Python
+  client export adapters.
+- `src/oviqs/adapters/integrations/openevals_adapter.py`: OpenEvals/agentevals callable evaluator adapters.
+- `src/oviqs/adapters/integrations/promptfoo_adapter.py`: promptfoo JSON result importer and explicit Python callable
   adapter. OVIQS does not silently shell out to the promptfoo CLI.
 
 Benchmark dataset adapters:
 
-- `datasets/longbench.py`: LongBench row to `EvalSample` conversion.
-- `datasets/helmet.py`: HELMET row to `EvalSample` conversion.
-- `datasets/ruler.py`: RULER row to `EvalSample` conversion.
+- `src/oviqs/adapters/datasets/longbench.py`: LongBench row to `EvalSample` conversion.
+- `src/oviqs/adapters/datasets/helmet.py`: HELMET row to `EvalSample` conversion.
+- `src/oviqs/adapters/datasets/ruler.py`: RULER row to `EvalSample` conversion.
 
 ## Integration rules
 

@@ -1,6 +1,15 @@
 from __future__ import annotations
 
 from oviqs.domain.references.catalog import (
+    MetricReference,
+    ReferenceSource,
+    build_report_reference_manifest,
+    get_metric_reference,
+    list_metric_references,
+    references_for_family,
+    require_metric_reference,
+)
+from oviqs.domain.references.catalog import (
     get_metric_reference as get_metric_reference_from_catalog,
 )
 from oviqs.domain.references.catalog import (
@@ -14,15 +23,6 @@ from oviqs.domain.references.catalog import (
 )
 from oviqs.domain.references.oracles import (
     build_report_reference_manifest as build_oracle_reference_manifest,
-)
-from oviqs.references import (
-    MetricReference,
-    ReferenceSource,
-    build_report_reference_manifest,
-    get_metric_reference,
-    list_metric_references,
-    references_for_family,
-    require_metric_reference,
 )
 
 __all__ = [

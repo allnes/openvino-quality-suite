@@ -1,12 +1,12 @@
 import numpy as np
 import pytest
 
-from oviqs.metrics.likelihood import (
+from oviqs.adapters.runners.dummy import DummyLogitsRunner
+from oviqs.domain.metrics.likelihood import (
     nll_ppl_from_logits,
     sliding_window_ppl,
     token_logprobs_from_logits,
 )
-from oviqs.runners.dummy import DummyLogitsRunner
 
 
 def test_uniform_distribution_ppl_matches_vocab_size():

@@ -46,7 +46,7 @@ space. Use both when diagnosing regressions.
 
 ## OVIQS Implementation
 
-Source: `src/oviqs/metrics/distribution_drift.py`.
+Source: `src/oviqs/domain/metrics/distribution_drift.py`.
 
 Required inputs:
 

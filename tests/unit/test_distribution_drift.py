@@ -1,7 +1,11 @@
 import numpy as np
 import pytest
 
-from oviqs.metrics.distribution_drift import aggregate_drift, distribution_drift, topk_overlap
+from oviqs.domain.metrics.distribution_drift import (
+    aggregate_drift,
+    distribution_drift,
+    topk_overlap,
+)
 
 
 def test_identical_logits_have_zero_drift():

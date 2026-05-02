@@ -32,12 +32,15 @@ Metrics stay backend-agnostic once logits, generations or traces are available.
   writers/renderers, local storage, plugin registries and observability sinks.
 - `oviqs.interfaces`: CLI, HTTP and gRPC entry points.
 - `oviqs.platform`: bootstrap container, profile configuration and path safety utilities.
-- `oviqs.core`, `oviqs.metrics`, `oviqs.runners`, `oviqs.datasets`, `oviqs.aggregation`,
-  `oviqs.reporting`, `oviqs.integrations` and `oviqs.references`: stable compatibility
-  modules and metric implementations used by the newer layered API.
-- `oviqs.cli`: compatibility module that exports the Typer app from `oviqs.interfaces.cli`.
+- `oviqs.adapters.integrations`: optional external evaluation framework adapters.
+- `oviqs.cli`: console entry module that exports the Typer app from `oviqs.interfaces.cli`.
 - `oviqs.contracts`: JSON Schema and protobuf contracts for external report and worker
   integration.
+
+This project is pre-stable. Legacy compatibility packages such as `oviqs.core`,
+`oviqs.metrics`, `oviqs.runners`, `oviqs.datasets`, `oviqs.aggregation`,
+`oviqs.reporting`, `oviqs.references` and `oviqs.models` are not public contracts and
+must not be preserved as import shims. Code should move directly into the target layer.
 
 ## Data flow
 
@@ -57,9 +60,9 @@ The report schema is intentionally sectioned by diagnostic surface:
 
 Package metadata declares entry-point groups for external plugins:
 
-- `oviqs.runners`: runner implementations that satisfy `LogitsRunnerPort` or
+- `oviqs.runners`: plugin group for runner implementations that satisfy `LogitsRunnerPort` or
   `GenerationRunnerPort`.
-- `oviqs.datasets`: dataset adapters that satisfy `DatasetReaderPort`.
+- `oviqs.datasets`: plugin group for dataset adapters that satisfy `DatasetReaderPort`.
 - `oviqs.reporters`: report IO or rendering adapters.
 
 Built-in entry points currently expose the dummy runner, JSONL dataset adapter, JSON report
@@ -99,9 +102,9 @@ backend cannot expose aligned logits for the same token positions, record that
 metric as missing or `unknown` instead of fabricating a comparable value.
 
 Application services may import domain and port modules plus adapter factories supplied by
-the bootstrap container. Interface and application code should not import legacy runner,
-dataset, reporting or metric implementation modules directly; tests enforce this boundary
-for `oviqs.cli`, `oviqs.interfaces`, `oviqs.application` and `oviqs.ports`.
+the bootstrap container. Interface and application code must not import legacy runner,
+dataset, reporting or metric implementation modules. Tests enforce this boundary for
+`oviqs.cli`, `oviqs.domain`, `oviqs.interfaces`, `oviqs.application` and `oviqs.ports`.
 
 ## GPU Metric Verification
 

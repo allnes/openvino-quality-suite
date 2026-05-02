@@ -1,16 +1,16 @@
 import json
 
-from oviqs.core.sample import EvalSample
-from oviqs.core.trace import AgentTrace, TraceStep
-from oviqs.datasets.helmet import helmet_row_to_sample
-from oviqs.datasets.longbench import longbench_row_to_sample
-from oviqs.datasets.ruler import ruler_row_to_sample
-from oviqs.integrations.base import run_callable_integration
-from oviqs.integrations.lighteval_adapter import LightEvalTask, evaluate_with_lighteval
-from oviqs.integrations.openevals_adapter import evaluate_with_openevals
-from oviqs.integrations.phoenix_adapter import agent_trace_to_spans
-from oviqs.integrations.promptfoo_adapter import import_promptfoo_results
-from oviqs.integrations.ragas_adapter import build_ragas_rows
+from oviqs.adapters.datasets.helmet import helmet_row_to_sample
+from oviqs.adapters.datasets.longbench import longbench_row_to_sample
+from oviqs.adapters.datasets.ruler import ruler_row_to_sample
+from oviqs.adapters.integrations.base import run_callable_integration
+from oviqs.adapters.integrations.lighteval_adapter import LightEvalTask, evaluate_with_lighteval
+from oviqs.adapters.integrations.openevals_adapter import evaluate_with_openevals
+from oviqs.adapters.integrations.phoenix_adapter import agent_trace_to_spans
+from oviqs.adapters.integrations.promptfoo_adapter import import_promptfoo_results
+from oviqs.adapters.integrations.ragas_adapter import build_ragas_rows
+from oviqs.domain.samples import EvalSample
+from oviqs.domain.traces import AgentTrace, TraceStep
 
 
 def test_callable_integration_normalizes_dict():

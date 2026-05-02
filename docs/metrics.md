@@ -48,7 +48,7 @@ behavior.
 ## Reference and Degradation Oracles
 
 Every metric used in a report or gate must have a reference/oracle that can decide whether
-the current result degraded. The runtime catalog lives in `oviqs.references` and is included
+the current result degraded. The runtime catalog lives in `oviqs.domain.references` and is included
 in JSON reports as `metric_references`.
 
 Use the CLI to inspect the catalog:

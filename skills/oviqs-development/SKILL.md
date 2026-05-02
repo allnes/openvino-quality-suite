@@ -15,15 +15,15 @@ Use this skill for code and documentation changes in this repository.
    PyTorch, evaluation frameworks or observability packages unless that adapter is used.
 4. Update docs and examples when public CLI flags, runner names, data formats, report
    sections or gate semantics change.
-5. Keep `src/oviqs/models` tracked; `/models/` is the ignored generated artifact root.
+5. Keep `src/oviqs/domain/models` tracked; `/models/` is the ignored generated artifact root.
 6. Keep the layered boundaries intact: interfaces call application services, application
    code depends on domain and ports, and concrete runner/dataset/report implementations
-   stay in adapters or legacy compatibility modules.
+   stay in adapters.
 7. Keep optional integrations lazy. Shared evaluator behavior belongs in
-   `oviqs.integrations.base`; infrastructure adapters live under `oviqs.adapters` and
-   should satisfy ports without importing optional extras until used.
-8. Register new gateable scalar metrics in `oviqs.references`; reports and gates rely on
-   reference/oracle metadata to decide whether a metric is quality-gate ready.
+   `oviqs.adapters.integrations.base`; infrastructure adapters live under
+   `oviqs.adapters` and should satisfy ports without importing optional extras until used.
+8. Register new gateable scalar metrics in `oviqs.domain.references`; reports and gates
+   rely on reference/oracle metadata to decide whether a metric is quality-gate ready.
 9. Add focused tests for metric math, schemas, gates, metric references, model-matrix
    behavior, adapters, architecture boundaries and CLI behavior affected by the change.
 10. Update `docs/metric_playbook.md` and the matching `docs/metric_details/*.md` file when
@@ -62,7 +62,7 @@ The package build, wheel install smoke test, `import oviqs` and `oviq --help` ch
 ## Design guardrails
 
 - Metrics should operate on normalized arrays, reports or traces, not on backend-specific objects.
-- Runner adapters should translate framework outputs into OVIQS core contracts.
+- Runner adapters should translate framework outputs into OVIQS domain contracts.
 - New delivery surfaces should add a port or interface before coupling application services
   to concrete infrastructure.
 - RAG, agent, serving and long-context CLI commands should compute rule-based metrics when

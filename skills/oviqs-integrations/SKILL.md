@@ -14,7 +14,7 @@ Read only what is needed:
 - `docs/integrations.md` for adapter boundaries and install guidance.
 - `requirements/integrations.txt` for shared evaluator dependencies.
 - `requirements/lighteval.txt` for the separate LightEval environment.
-- `src/oviqs/integrations/base.py` for shared result normalization.
+- `src/oviqs/adapters/integrations/base.py` for shared result normalization.
 - `src/oviqs/ports/*.py` for public adapter protocols.
 - `src/oviqs/adapters/plugins/entrypoints.py` for Python entry-point plugin discovery.
 - `tests/unit/test_external_integrations.py` for adapter contract examples.

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from oviqs.core.sample import EvalSample
+from oviqs.domain.samples.models import EvalSample
 
 
 def validate_samples(samples: list[EvalSample]) -> list[EvalSample]:

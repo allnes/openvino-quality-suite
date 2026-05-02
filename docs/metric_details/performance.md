@@ -28,7 +28,7 @@ tokens_per_second = num_tokens / (latency_ms / 1000)
 
 ## OVIQS Implementation
 
-Source: `src/oviqs/metrics/performance.py` and runner metadata.
+Source: `src/oviqs/domain/metrics/performance.py` and runner metadata.
 
 Current helper:
 

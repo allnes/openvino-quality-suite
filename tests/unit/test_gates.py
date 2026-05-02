@@ -1,4 +1,4 @@
-from oviqs.aggregation.gates import evaluate_gates
+from oviqs.domain.gates import evaluate_gates
 
 
 def test_gates_pass_warning_unknown():

@@ -5,7 +5,7 @@ from oviqs.domain.models.genai_matrix import (
     GenAIModelEntry,
     GenAIModelMatrix,
     export_plan,
-    load_genai_model_matrix,
+    sanitize_model_name,
 )
 
 __all__ = [
@@ -13,5 +13,5 @@ __all__ = [
     "GenAIModelEntry",
     "GenAIModelMatrix",
     "export_plan",
-    "load_genai_model_matrix",
+    "sanitize_model_name",
 ]

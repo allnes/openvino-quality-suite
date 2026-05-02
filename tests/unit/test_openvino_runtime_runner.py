@@ -1,6 +1,6 @@
 import numpy as np
 
-from oviqs.runners.openvino_runtime import OVRuntimeLogitsRunner, _resolve_model_and_tokenizer
+from oviqs.adapters.runners.ov_runtime import OVRuntimeLogitsRunner, _resolve_model_and_tokenizer
 
 
 def test_resolve_openvino_runtime_directory_prefers_openvino_model_xml(tmp_path):

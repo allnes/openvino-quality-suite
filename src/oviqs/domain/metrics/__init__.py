@@ -1,5 +1,7 @@
 from __future__ import annotations
 
-from oviqs.core.metric import MetricDict
+from typing import Any
+
+MetricDict = dict[str, Any]
 
 __all__ = ["MetricDict"]
