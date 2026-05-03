@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Protocol
 
+from oviqs.domain.reporting import ReportAnalysis, ReportBundle, ReportViewModel
 from oviqs.domain.reports import EvaluationReport
 
 
@@ -25,14 +26,21 @@ class EvaluationReportWriterPort(Protocol):
 class ReportRendererPort(Protocol):
     format_name: str
 
-    def render(self, report: dict[str, Any]) -> str: ...
+    def render(self, report: ReportViewModel) -> str: ...
 
 
-class ReferenceComparisonWriterPort(Protocol):
-    def write(
+class ReportBundleWriterPort(Protocol):
+    def write_bundle(
         self,
-        reports: list[str],
+        report: dict[str, Any],
+        analysis: ReportAnalysis,
         out: Path,
+    ) -> ReportBundle: ...
+
+
+class ReferenceComparisonRendererPort(Protocol):
+    def render(
+        self,
+        comparison: dict[str, Any],
         format_name: str,
-        include_all_metrics: bool,
-    ) -> None: ...
+    ) -> str: ...

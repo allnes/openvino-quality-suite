@@ -64,3 +64,51 @@ Agent traces are ordered event sequences:
 ```
 
 Step `type` must be one of `message`, `tool_call`, `observation`, `final` or `error`.
+
+## Evaluation reports
+
+Evaluation output is a versioned JSON object with `schema_version`, `run`, `summary` and
+diagnostic sections such as `likelihood`, `inference_equivalence`, `long_context`,
+`generation`, `rag`, `agent`, `serving`, `performance` and `reproducibility`.
+
+Optional reporting fields are additive:
+
+- `analysis`: normalized metric observations, findings, regressions and outliers.
+- `artifacts`: links to generated report files.
+- `report_metadata`: builder metadata.
+- `ui_hints`: renderer-only hints.
+- `sample_metrics_summary`: sample-level summary data.
+- `raw_sample_metrics_uri`: external pointer to detailed sample metrics.
+
+`report validate` checks the JSON envelope against the project JSON Schema. It uses
+`jsonschema` when available and falls back to the built-in validator in minimal
+environments. Known reporting fields such as `analysis.metrics`, `analysis.findings`,
+`artifacts`, `report_metadata` and `sample_metrics_summary` have explicit schema shapes
+while still allowing additive metric-specific properties.
+
+Report readers normalize persisted reports through
+`oviqs.application.reporting.schema_normalization` before analysis or rendering. Persisted
+reports must already use the current `openvino_llm_quality_v1` contract; missing, older or
+future `schema_version` values are rejected.
+
+## Report bundles
+
+`oviq report build` writes a stable directory layout:
+
+```text
+report.json
+analysis.json
+metrics.csv
+sample_metrics.jsonl
+index.md
+dashboard.html
+assets/
+metadata.json
+```
+
+`metrics.csv` is the normalized scalar metric table. The writer uses `pandas` when
+installed and falls back to the Python CSV library. `analysis.json` also carries
+`trend_points` when a trend store is configured. `sample_metrics.jsonl` contains
+per-sample rows extracted from section-level `samples` arrays. Each row is validated
+against `src/oviqs/contracts/jsonschema/sample_metric.schema.json` and bundle metadata
+records any validation errors.

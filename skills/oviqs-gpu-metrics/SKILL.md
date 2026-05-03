@@ -35,7 +35,8 @@ Read only what is needed:
 7. Use a documented target GPU device ID when validating larger target model behavior.
 8. Use the standard metric matrix script when validating reference coverage across metric
    families.
-9. Use `oviq reference-comparison` to compare standard matrix reports across target models.
+9. Use `oviq report reference-comparison` to compare standard matrix reports across target
+   models.
 10. Store generated reports under ignored `reports/` or remote workspace report paths.
 11. Keep `uv.lock`, requirements files and CI docs aligned when GPU or evaluator
     dependencies change.
@@ -59,5 +60,5 @@ Read only what is needed:
 .venv/bin/oviq genai-export-plan --model openai-community/gpt2 --variant eval_logits --variant genai_generation
 .venv/bin/oviq run-gpu-suite --model models/sshleifer--tiny-gpt2-eval_logits --backend openvino-runtime --dataset /tmp/likelihood.jsonl --device GPU --out reports/gpu_metric_suite.json
 PYTHONPATH=src .venv/bin/python scripts/remote_gpu_standard_metric_matrix.py --model models/openai-community--gpt2-eval-fp16 --genai-model models/openai-community--gpt2-genai-fp16 --dataset-cache data/standard-matrix --out reports/standard_metric_matrix.json
-.venv/bin/oviq reference-comparison --report gpt2=reports/standard_metric_matrix.json --format html-dashboard --out reports/standard_metric_matrix.html
+.venv/bin/oviq report reference-comparison --report gpt2=reports/standard_metric_matrix.json --format html-dashboard --out reports/standard_metric_matrix.html
 ```

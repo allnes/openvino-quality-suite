@@ -14,10 +14,12 @@ dependencies = [
   "numpy>=1.26",
   "scipy>=1.11",
   "pydantic>=2.6",
+  "jsonschema>=4.22",
   "typer>=0.12",
   "rich>=13.7",
   "pyyaml>=6.0",
   "pandas>=2.0",
+  "tomli>=2.0; python_version < '3.11'",
 ]
 
 [project.optional-dependencies]
@@ -67,6 +69,19 @@ jsonl = "oviqs.adapters.datasets:JsonlDatasetAdapter"
 [project.entry-points."oviqs.reporters"]
 json = "oviqs.adapters.reporting:JsonReportAdapter"
 markdown = "oviqs.adapters.reporting:MarkdownReportRenderer"
+html-dashboard = "oviqs.adapters.reporting:HtmlDashboardRenderer"
+metrics-csv = "oviqs.adapters.reporting:CsvMetricsWriter"
+sample-jsonl = "oviqs.adapters.reporting:JsonlSampleMetricsStore"
+reference-comparison = "oviqs.adapters.reporting:ReferenceComparisonAdapter"
+
+[project.entry-points."oviqs.analysis_rules"]
+built-in = "oviqs.adapters.analysis:BuiltInAnalysisRules"
+
+[project.entry-points."oviqs.metric_catalogs"]
+default = "oviqs.adapters.analysis:MetricReferenceCatalog"
+
+[project.entry-points."oviqs.gate_evaluators"]
+default = "oviqs.adapters.analysis:DomainGateEvaluator"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/oviqs"]

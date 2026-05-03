@@ -2,7 +2,8 @@ from pathlib import Path
 
 import pytest
 
-from oviqs.domain.reports import EvaluationReport, ReportRun, write_report
+from oviqs.adapters.reporting import CanonicalReportWriter
+from oviqs.domain.reports import EvaluationReport, ReportRun
 from oviqs.domain.samples import EvalSample, TokenizedSample
 from oviqs.domain.traces import AgentTrace, TraceStep
 
@@ -24,5 +25,5 @@ def test_tokenized_and_trace_schema():
 def test_report_writer(tmp_path: Path):
     report = EvaluationReport(run=ReportRun(id="run1"), likelihood={"ppl": 2.0})
     out = tmp_path / "report.json"
-    write_report(report, out)
+    CanonicalReportWriter().write(report, out)
     assert '"ppl": 2.0' in out.read_text(encoding="utf-8")

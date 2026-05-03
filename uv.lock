@@ -5197,6 +5197,7 @@ name = "oviqs"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "jsonschema" },
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "numpy", version = "2.4.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "pandas", version = "2.3.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
@@ -5206,6 +5207,7 @@ dependencies = [
     { name = "rich" },
     { name = "scipy", version = "1.15.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "scipy", version = "1.17.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "tomli", marker = "python_full_version < '3.11'" },
     { name = "typer" },
 ]
 
@@ -5270,6 +5272,7 @@ requires-dist = [
     { name = "deepeval", marker = "extra == 'agent'", specifier = ">=2.0" },
     { name = "deptry", marker = "extra == 'dev'", specifier = ">=0.23" },
     { name = "interrogate", marker = "extra == 'dev'", specifier = ">=1.7" },
+    { name = "jsonschema", specifier = ">=4.22" },
     { name = "lighteval", marker = "extra == 'eval'", specifier = ">=0.8" },
     { name = "lm-eval", extras = ["api"], marker = "extra == 'eval'", specifier = ">=0.4.0" },
     { name = "matplotlib", marker = "extra == 'plots'", specifier = ">=3.8" },
@@ -5294,6 +5297,7 @@ requires-dist = [
     { name = "rich", specifier = ">=13.7" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.5" },
     { name = "scipy", specifier = ">=1.11" },
+    { name = "tomli", marker = "python_full_version < '3.11'", specifier = ">=2.0" },
     { name = "torch", marker = "extra == 'openvino'", specifier = ">=2.2" },
     { name = "transformers", marker = "extra == 'openvino'", specifier = ">=4.40" },
     { name = "twine", marker = "extra == 'dev'", specifier = ">=6.0" },

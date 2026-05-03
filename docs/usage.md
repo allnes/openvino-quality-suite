@@ -194,13 +194,25 @@ would otherwise pass the threshold.
 Render a Markdown report:
 
 ```bash
-oviq render-report --report /tmp/suite.json --out /tmp/suite.md
+oviq report build --report /tmp/suite.json --out /tmp/suite-report --format all
+oviq report render --bundle /tmp/suite-report --format markdown --out /tmp/suite.md
+```
+
+Build a full report bundle with machine-readable analysis, CSV metrics, Markdown and a
+self-contained HTML dashboard:
+
+```bash
+oviq report build --report /tmp/suite.json --out /tmp/suite-report --format all
+oviq report analyze --report /tmp/suite.json --out /tmp/suite-analysis.json
+oviq report analyze --report /tmp/suite.json --trend-history /tmp/report-history.jsonl --out /tmp/suite-analysis.json
+oviq report metrics-table --report /tmp/suite.json --out /tmp/suite.metrics.csv
+oviq report render --bundle /tmp/suite-report --format markdown --out /tmp/suite-report/index.md
 ```
 
 Build a reference-backed comparison across one or more reports:
 
 ```bash
-oviq reference-comparison \
+oviq report reference-comparison \
   --report baseline=/tmp/baseline.json \
   --report current=/tmp/current.json \
   --format markdown-transposed \
@@ -226,5 +238,7 @@ from `oviqs.interfaces.cli`. Programmatic callers should prefer the layered modu
 - `oviqs.interfaces.http.create_app()` for the optional HTTP interface;
 - `oviqs.interfaces.grpc` for request/response mappers and worker service contracts.
 
-Runner, dataset and reporter plugins can be exposed through Python entry-point groups
-`oviqs.runners`, `oviqs.datasets` and `oviqs.reporters`.
+Runner, dataset, reporter, analysis-rule, metric-catalog and gate-evaluator plugins can be
+exposed through Python entry-point groups `oviqs.runners`, `oviqs.datasets`,
+`oviqs.reporters`, `oviqs.analysis_rules`, `oviqs.metric_catalogs` and
+`oviqs.gate_evaluators`.

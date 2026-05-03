@@ -27,8 +27,10 @@ Use this skill for hands-on evaluation runs in this repository.
 7. Use `oviq list-metric-references` before trusting or changing gates.
 8. Write generated reports outside source paths, preferably `/tmp` or ignored `reports/`.
 9. Run `oviq compare` with `configs/gates/default_gates.yaml` when thresholds matter.
-10. Render Markdown with `oviq render-report` when a single human-readable report is needed.
-11. Use `oviq reference-comparison` when comparing metric values across several reports.
+10. Use `oviq report build` for report bundles with analysis, CSV metrics, Markdown,
+    HTML dashboard and sample-level JSONL artifacts.
+11. Use `oviq report render` for standalone Markdown or HTML rendering from a bundle.
+12. Use `oviq report reference-comparison` when comparing metric values across reports.
 
 ## Guardrails
 
@@ -38,6 +40,8 @@ Use this skill for hands-on evaluation runs in this repository.
 - Keep rule-based RAG/agent values separate from external judge-backed values.
 - Treat gate checks with missing metric references as `unknown`, not pass.
 - Leave judge-backed RAG or agent metrics missing unless the evaluator actually ran.
+- Keep generated report bundles, metrics CSV, dashboards and sample JSONL under `/tmp`,
+  CI artifact paths or ignored `reports/`.
 - Do not commit generated reports, caches, model exports or virtual environments.
 - Keep coverage files, lockfile refreshes and CI artifacts separate from evaluation output
   unless the change explicitly updates release tooling.
@@ -53,7 +57,8 @@ Use this skill for hands-on evaluation runs in this repository.
 .venv/bin/oviq list-genai-models --tier smoke --metric likelihood
 .venv/bin/oviq list-metric-references --family rag --json
 .venv/bin/oviq compare --baseline /tmp/likelihood.json --current /tmp/likelihood.json --gates configs/gates/default_gates.yaml --out /tmp/comparison.json
-.venv/bin/oviq render-report --report /tmp/likelihood.json --out /tmp/likelihood.md
-.venv/bin/oviq reference-comparison --report baseline=/tmp/baseline.json --report current=/tmp/current.json --format markdown-transposed --out /tmp/reference_comparison.md
+.venv/bin/oviq report build --report /tmp/likelihood.json --out /tmp/likelihood-report --format all
+.venv/bin/oviq report render --bundle /tmp/likelihood-report --format markdown --out /tmp/likelihood.md
+.venv/bin/oviq report reference-comparison --report baseline=/tmp/baseline.json --report current=/tmp/current.json --format markdown-transposed --out /tmp/reference_comparison.md
 uv run pre-commit run --all-files --show-diff-on-failure
 ```

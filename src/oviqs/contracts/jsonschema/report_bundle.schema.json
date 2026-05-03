@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/allnes/openvino-quality-suite/blob/main/src/oviqs/contracts/jsonschema/report_bundle.schema.json",
+  "title": "OVIQS Report Bundle",
+  "type": "object",
+  "required": ["root", "report_json", "analysis_json", "metrics_csv", "sample_metrics_jsonl", "index_md", "dashboard_html"],
+  "properties": {
+    "root": { "type": "string" },
+    "report_json": { "type": "string" },
+    "analysis_json": { "type": "string" },
+    "metrics_csv": { "type": "string" },
+    "sample_metrics_jsonl": { "type": "string" },
+    "index_md": { "type": "string" },
+    "dashboard_html": { "type": "string" },
+    "metadata_json": { "type": ["string", "null"] }
+  },
+  "additionalProperties": true
+}

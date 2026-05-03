@@ -16,6 +16,8 @@ Read only what is needed:
 - `docs/metric_playbook.md` and `docs/metric_details/*.md` for per-metric descriptions.
 - `docs/reports_and_gates.md` for manifest and gate behavior.
 - `src/oviqs/adapters/reporting/reference_comparison.py` for cross-report comparison output.
+- `src/oviqs/application/reporting/reference_comparison_service.py` for report comparison
+  assembly.
 - `tests/unit/test_metric_references.py` for catalog contract tests.
 - `tests/unit/test_gates.py` for reference-aware gate behavior.
 
@@ -39,6 +41,6 @@ Read only what is needed:
 ```bash
 .venv/bin/oviq list-metric-references
 .venv/bin/oviq list-metric-references --family serving --json
-.venv/bin/oviq reference-comparison --report baseline=/tmp/baseline.json --report current=/tmp/current.json --format markdown-transposed --out /tmp/reference_comparison.md
+.venv/bin/oviq report reference-comparison --report baseline=/tmp/baseline.json --report current=/tmp/current.json --format markdown-transposed --out /tmp/reference_comparison.md
 .venv/bin/pytest tests/unit/test_metric_references.py tests/unit/test_gates.py
 ```

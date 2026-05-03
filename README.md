@@ -28,7 +28,8 @@ Compare a report against gates and render Markdown:
 ```bash
 oviq compare --baseline /tmp/likelihood.json --current /tmp/likelihood.json \
   --gates configs/gates/default_gates.yaml --out /tmp/comparison.json
-oviq render-report --report /tmp/likelihood.json --out /tmp/likelihood.md
+oviq report build --report /tmp/likelihood.json --out /tmp/likelihood-report --format all
+oviq report render --bundle /tmp/likelihood-report --format markdown --out /tmp/likelihood.md
 ```
 
 ## OpenVINO export examples
@@ -68,8 +69,9 @@ that exposes logits.
 - `oviq run-suite`: suite config entry point.
 - `oviq run-gpu-suite`: GPU metric verification scorecard for exported OpenVINO models.
 - `oviq compare`: threshold gates over report metrics.
-- `oviq render-report`: JSON report to Markdown.
-- `oviq reference-comparison`: compare reference-backed metrics across reports.
+- `oviq report build/analyze/render/metrics-table/validate`: production report bundle,
+  normalized metric observations, findings, Markdown, HTML and CSV artifacts.
+- `oviq report reference-comparison`: compare reference-backed metrics across reports.
 - `oviq metric-long-context`: utility for position-bucketed long-context metrics.
 - `oviq list-genai-models`: inspect the recommended GenAI model matrix.
 - `oviq list-metric-references`: inspect metric reference/oracle metadata used by reports and gates.

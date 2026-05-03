@@ -39,14 +39,12 @@ from oviqs.application.services.metric_tools import (
     distractor_sensitivity,
     lost_in_middle_from_json,
 )
-from oviqs.application.services.render_report import (
-    render_report_to_path,
-    write_reference_comparison_table,
-)
 from oviqs.application.services.run_suite import write_suite_scaffold_report
+from oviqs.interfaces.cli.report_commands import report_app
 from oviqs.platform.bootstrap import build_default_container
 
 app = typer.Typer(help="OVIQS: OpenVINO Inference Quality Suite")
+app.add_typer(report_app, name="report")
 console = Console()
 
 
@@ -271,53 +269,7 @@ def compare(
     gates: Annotated[Path | None, typer.Option(help="Gate YAML")] = None,
 ) -> None:
     container = _container()
-    compare_reports(baseline, current, out, container.report_io, gates)
-    console.print(f"Wrote {out}")
-
-
-@app.command("render-report")
-def render_report(
-    report: Annotated[Path, typer.Option(help="Input report JSON")],
-    out: Annotated[Path, typer.Option(help="Output rendered report")],
-    format: Annotated[str, typer.Option(help="markdown")] = "markdown",
-) -> None:
-    container = _container()
-    try:
-        render_report_to_path(report, out, container.report_io, container.markdown_renderer, format)
-    except ValueError as exc:
-        raise typer.BadParameter(str(exc)) from exc
-    console.print(f"Wrote {out}")
-
-
-@app.command("reference-comparison")
-def reference_comparison(
-    report: Annotated[
-        list[str],
-        typer.Option(
-            "--report",
-            help="Report JSON path, optionally LABEL=PATH. Repeat for multiple reports.",
-        ),
-    ],
-    out: Annotated[Path, typer.Option(help="Output comparison table")],
-    format: Annotated[
-        str,
-        typer.Option(help="markdown, markdown-transposed, html-dashboard, csv or json"),
-    ] = "markdown",
-    all_metrics: Annotated[
-        bool,
-        typer.Option("--all-metrics", help="Include every metric listed in report coverage"),
-    ] = False,
-) -> None:
-    if not report:
-        raise typer.BadParameter("At least one --report is required")
-    container = _container()
-    write_reference_comparison_table(
-        report,
-        out,
-        container.reference_comparison_writer,
-        format,
-        all_metrics,
-    )
+    compare_reports(baseline, current, out, container.report_io, container.storage, gates)
     console.print(f"Wrote {out}")
 
 

@@ -5,6 +5,19 @@ from typer.testing import CliRunner
 from oviqs.cli import app
 
 
+def _report_payload(run_id: str, **sections):
+    return {
+        "schema_version": "openvino_llm_quality_v1",
+        "run": {
+            "id": run_id,
+            "suite": "integration",
+            "created_at": "2026-05-03T00:00:00Z",
+        },
+        "summary": {"overall_status": "pass"},
+        **sections,
+    }
+
+
 def test_eval_long_context_cli_computes_metrics(tmp_path):
     dataset = tmp_path / "long.jsonl"
     dataset.write_text(
@@ -161,23 +174,23 @@ def test_reference_comparison_cli_writes_metric_reference_table(tmp_path):
     mistral = tmp_path / "mistral.json"
     qwen.write_text(
         json.dumps(
-            {
-                "run": {"id": "qwen"},
-                "likelihood": {"status": "pass", "perplexity": 29.6},
-                "serving": {"status": "pass", "batch_mean_kl": 0.0},
-                "metric_references": {},
-            }
+            _report_payload(
+                "qwen",
+                likelihood={"status": "pass", "perplexity": 29.6},
+                serving={"status": "pass", "batch_mean_kl": 0.0},
+                metric_references={},
+            )
         ),
         encoding="utf-8",
     )
     mistral.write_text(
         json.dumps(
-            {
-                "run": {"id": "mistral"},
-                "likelihood": {"status": "pass", "perplexity": 7.8},
-                "serving": {"status": "pass", "batch_mean_kl": 0.0},
-                "metric_references": {},
-            }
+            _report_payload(
+                "mistral",
+                likelihood={"status": "pass", "perplexity": 7.8},
+                serving={"status": "pass", "batch_mean_kl": 0.0},
+                metric_references={},
+            )
         ),
         encoding="utf-8",
     )
@@ -186,6 +199,7 @@ def test_reference_comparison_cli_writes_metric_reference_table(tmp_path):
     result = CliRunner().invoke(
         app,
         [
+            "report",
             "reference-comparison",
             "--report",
             f"Qwen={qwen}",
@@ -203,15 +217,65 @@ def test_reference_comparison_cli_writes_metric_reference_table(tmp_path):
     assert "29.6 (measured)" in content
 
 
+def test_compare_cli_includes_reporting_comparison(tmp_path):
+    baseline = tmp_path / "baseline.json"
+    current = tmp_path / "current.json"
+    gates = tmp_path / "gates.yaml"
+    out = tmp_path / "comparison.json"
+    baseline.write_text(
+        json.dumps(
+            _report_payload(
+                "baseline",
+                likelihood={"status": "pass", "perplexity": 8.0},
+                metric_references={},
+            )
+        ),
+        encoding="utf-8",
+    )
+    current.write_text(
+        json.dumps(
+            _report_payload(
+                "current",
+                likelihood={"status": "pass", "perplexity": 10.0},
+                metric_references={},
+            )
+        ),
+        encoding="utf-8",
+    )
+    gates.write_text("likelihood:\n  perplexity_max: 9.0\n", encoding="utf-8")
+
+    result = CliRunner().invoke(
+        app,
+        [
+            "compare",
+            "--baseline",
+            str(baseline),
+            "--current",
+            str(current),
+            "--gates",
+            str(gates),
+            "--out",
+            str(out),
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(out.read_text(encoding="utf-8"))
+    assert payload["gates"]["overall_status"] == "warning"
+    assert payload["reporting_comparison"]["biggest_regressions"][0]["path"] == (
+        "likelihood.perplexity"
+    )
+
+
 def test_reference_comparison_cli_writes_transposed_table(tmp_path):
     report = tmp_path / "qwen.json"
     report.write_text(
         json.dumps(
-            {
-                "run": {"id": "qwen"},
-                "likelihood": {"status": "pass", "perplexity": 29.6},
-                "metric_references": {},
-            }
+            _report_payload(
+                "qwen",
+                likelihood={"status": "pass", "perplexity": 29.6},
+                metric_references={},
+            )
         ),
         encoding="utf-8",
     )
@@ -220,6 +284,7 @@ def test_reference_comparison_cli_writes_transposed_table(tmp_path):
     result = CliRunner().invoke(
         app,
         [
+            "report",
             "reference-comparison",
             "--report",
             f"Qwen={report}",
@@ -241,17 +306,17 @@ def test_reference_comparison_cli_can_include_all_coverage_metrics(tmp_path):
     report = tmp_path / "qwen.json"
     report.write_text(
         json.dumps(
-            {
-                "run": {"id": "qwen"},
-                "likelihood": {"status": "pass", "perplexity": 29.6, "num_tokens": 12},
-                "metric_coverage": {
+            _report_payload(
+                "qwen",
+                likelihood={"status": "pass", "perplexity": 29.6, "num_tokens": 12},
+                metric_coverage={
                     "entries": [
                         {"section": "likelihood", "metric": "perplexity", "status": "measured"},
                         {"section": "likelihood", "metric": "num_tokens", "status": "measured"},
                     ]
                 },
-                "metric_references": {},
-            }
+                metric_references={},
+            )
         ),
         encoding="utf-8",
     )
@@ -260,6 +325,7 @@ def test_reference_comparison_cli_can_include_all_coverage_metrics(tmp_path):
     result = CliRunner().invoke(
         app,
         [
+            "report",
             "reference-comparison",
             "--report",
             f"Qwen={report}",
@@ -276,23 +342,57 @@ def test_reference_comparison_cli_can_include_all_coverage_metrics(tmp_path):
     assert "| Model | likelihood.perplexity | likelihood.num_tokens |" in content
 
 
+def test_reference_comparison_cli_writes_csv(tmp_path):
+    report = tmp_path / "qwen.json"
+    report.write_text(
+        json.dumps(
+            _report_payload(
+                "qwen",
+                likelihood={"status": "pass", "perplexity": 29.6},
+                metric_references={},
+            )
+        ),
+        encoding="utf-8",
+    )
+    out = tmp_path / "comparison.csv"
+
+    result = CliRunner().invoke(
+        app,
+        [
+            "report",
+            "reference-comparison",
+            "--report",
+            f"Qwen={report}",
+            "--out",
+            str(out),
+            "--format",
+            "csv",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    content = out.read_text(encoding="utf-8")
+    assert content.startswith("section,metric,reference,degradation_rule,Qwen")
+    assert "likelihood,perplexity,lm-evaluation-harness" in content
+
+
 def test_reference_comparison_cli_writes_html_dashboard(tmp_path):
     report = tmp_path / "qwen.json"
     report.write_text(
         json.dumps(
-            {
-                "run": {"id": "qwen"},
-                "likelihood": {"status": "pass", "perplexity": 29.6, "num_tokens": 12},
-                "serving": {"status": "warning", "batch_mean_kl": 0.1},
-                "metric_coverage": {
+            _report_payload(
+                "qwen",
+                likelihood={"status": "pass", "perplexity": 29.6, "num_tokens": 12},
+                serving={"status": "warning", "batch_mean_kl": 0.1},
+                metric_coverage={
                     "entries": [
                         {"section": "likelihood", "metric": "perplexity", "status": "measured"},
                         {"section": "likelihood", "metric": "num_tokens", "status": "measured"},
                         {"section": "serving", "metric": "batch_mean_kl", "status": "measured"},
                     ]
                 },
-                "metric_references": {},
-            }
+                metric_references={},
+            )
         ),
         encoding="utf-8",
     )
@@ -301,6 +401,7 @@ def test_reference_comparison_cli_writes_html_dashboard(tmp_path):
     result = CliRunner().invoke(
         app,
         [
+            "report",
             "reference-comparison",
             "--report",
             f"Qwen={report}",

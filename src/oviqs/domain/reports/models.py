@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import json
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import Any
 
 from pydantic import BaseModel, Field
@@ -42,19 +40,12 @@ class EvaluationReport(BaseModel):
     gates: dict[str, Any] = Field(default_factory=dict)
     metric_references: dict[str, Any] = Field(default_factory=dict)
     reproducibility: dict[str, Any] = Field(default_factory=dict)
+    analysis: dict[str, Any] = Field(default_factory=dict)
+    artifacts: dict[str, Any] = Field(default_factory=dict)
+    report_metadata: dict[str, Any] = Field(default_factory=dict)
+    ui_hints: dict[str, Any] = Field(default_factory=dict)
+    sample_metrics_summary: dict[str, Any] = Field(default_factory=dict)
     raw_sample_metrics_uri: str | None = None
 
 
-def write_report(report: EvaluationReport | dict[str, Any], path: str | Path) -> None:
-    path = Path(path)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    payload = report.model_dump(mode="json") if isinstance(report, EvaluationReport) else report
-    payload.setdefault("schema_version", "openvino_llm_quality_v1")
-    if not payload.get("metric_references"):
-        from oviqs.domain.references import build_report_reference_manifest
-
-        payload["metric_references"] = build_report_reference_manifest(payload)
-    path.write_text(json.dumps(payload, indent=2, ensure_ascii=False, sort_keys=True) + "\n")
-
-
-__all__ = ["EvaluationReport", "ReportRun", "ReportSummary", "write_report"]
+__all__ = ["EvaluationReport", "ReportRun", "ReportSummary"]

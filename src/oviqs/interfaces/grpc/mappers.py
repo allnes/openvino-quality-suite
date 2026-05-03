@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any
 
 from oviqs.application.dto.requests import GpuSuiteRequest
+from oviqs.application.reporting import ReportAnalysisService, build_report_interface_response
 
 
 def gpu_suite_request_from_mapping(payload: dict[str, Any]) -> GpuSuiteRequest:
@@ -19,28 +20,13 @@ def gpu_suite_request_from_mapping(payload: dict[str, Any]) -> GpuSuiteRequest:
     )
 
 
-def evaluation_response_mapping(report: dict[str, Any], report_uri: str = "") -> dict[str, Any]:
-    return {
-        "run_id": str(report.get("run", {}).get("id", "")),
-        "overall_status": str(report.get("summary", {}).get("overall_status", "unknown")),
-        "metrics": _flatten_metrics(report),
-        "report_uri": report_uri,
-    }
-
-
-def _flatten_metrics(report: dict[str, Any]) -> list[dict[str, Any]]:
-    metrics: list[dict[str, Any]] = []
-    for section_name, section in report.items():
-        if not isinstance(section, dict) or section_name in {"run", "summary"}:
-            continue
-        for metric_name, value in section.items():
-            if isinstance(value, int | float):
-                metrics.append(
-                    {
-                        "name": f"{section_name}.{metric_name}",
-                        "value": float(value),
-                        "status": str(section.get("status", "unknown")),
-                        "reference": "",
-                    }
-                )
-    return metrics
+def evaluation_response_mapping(
+    report: dict[str, Any],
+    report_uri: str = "",
+    analysis_service: ReportAnalysisService | None = None,
+) -> dict[str, Any]:
+    return build_report_interface_response(
+        report,
+        analysis_service=analysis_service,
+        report_uri=report_uri,
+    ).grpc_mapping()

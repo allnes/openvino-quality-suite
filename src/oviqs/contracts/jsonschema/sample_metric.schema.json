@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/allnes/openvino-quality-suite/blob/main/src/oviqs/contracts/jsonschema/sample_metric.schema.json",
+  "title": "OVIQS Sample Metric Row",
+  "type": "object",
+  "required": ["section", "sample_index"],
+  "properties": {
+    "section": { "type": "string" },
+    "sample_index": { "type": "integer" },
+    "id": { "type": ["string", "integer", "null"] },
+    "sample_id": { "type": ["string", "integer", "null"] },
+    "status": { "type": "string", "enum": ["pass", "warning", "fail", "unknown"] }
+  },
+  "additionalProperties": true
+}

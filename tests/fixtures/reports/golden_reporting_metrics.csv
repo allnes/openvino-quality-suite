@@ -1,0 +1,4 @@
+path,section,name,value,unit,status,severity,reference_id,degradation_rule,baseline_value,delta_abs,delta_rel,threshold,threshold_rule,sample_count,tags
+likelihood.perplexity,likelihood,perplexity,10.0,,warning,medium,lm-evaluation-harness loglikelihood/loglikelihood_rolling,Degraded when current NLL/PPL or configured delta exceeds the reference baseline gate.,,,,8.0,threshold=8.0,,gated
+reproducibility.seed,reproducibility,seed,7,,pass,none,,,,,,,,,
+reproducibility.versions.oviqs,reproducibility,oviqs,test,,pass,none,,,,,,,,,

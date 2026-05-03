@@ -50,7 +50,9 @@ must not be preserved as import shims. Code should move directly into the target
 4. Application services produce logits, generations, traces or precomputed metric rows.
 5. Domain-level metric functions compute backend-independent metrics.
 6. Report writers emit a normalized `EvaluationReport` with `schema_version`.
-7. Optional comparison and rendering services evaluate gates and write human-readable output.
+7. Reporting services normalize nested sections into `MetricObservation` rows.
+8. Analysis and comparison services add findings, deltas, unknown metrics and regressions.
+9. Renderers consume report view models and write Markdown, HTML and CSV artifacts.
 
 The report schema is intentionally sectioned by diagnostic surface:
 `inference_equivalence`, `likelihood`, `long_context`, `generation`, `rag`,
@@ -64,11 +66,16 @@ Package metadata declares entry-point groups for external plugins:
   `GenerationRunnerPort`.
 - `oviqs.datasets`: plugin group for dataset adapters that satisfy `DatasetReaderPort`.
 - `oviqs.reporters`: report IO or rendering adapters.
+- `oviqs.analysis_rules`: report analysis rule adapters.
+- `oviqs.metric_catalogs`: metric reference catalog adapters.
+- `oviqs.gate_evaluators`: gate evaluator adapters.
 
-Built-in entry points currently expose the dummy runner, JSONL dataset adapter, JSON report
-adapter and Markdown renderer. Keep entry-point implementations optional-dependency safe:
-loading the package must not import OpenVINO, PyTorch, evaluator frameworks, service
-clients or observability packages unless the selected adapter is instantiated.
+Built-in entry points expose the dummy runner, JSONL dataset adapter, reporting adapters,
+analysis rules, metric catalogs and gate evaluators. The bootstrap container resolves these
+through plugin factories with source-tree fallbacks, so built-ins and external plugins follow
+the same composition path. Keep entry-point implementations optional-dependency safe: loading
+the package must not import OpenVINO, PyTorch, evaluator frameworks, service clients or
+observability packages unless the selected adapter is instantiated.
 
 ## Configuration profiles
 
@@ -102,9 +109,52 @@ backend cannot expose aligned logits for the same token positions, record that
 metric as missing or `unknown` instead of fabricating a comparable value.
 
 Application services may import domain and port modules plus adapter factories supplied by
-the bootstrap container. Interface and application code must not import legacy runner,
+the bootstrap container. Interface and application code must not import removed runner,
 dataset, reporting or metric implementation modules. Tests enforce this boundary for
 `oviqs.cli`, `oviqs.domain`, `oviqs.interfaces`, `oviqs.application` and `oviqs.ports`.
+
+## Reporting Architecture
+
+Reporting is split by responsibility:
+
+- `oviqs.domain.reporting`: stable domain objects such as `MetricObservation`,
+  `AnalysisFinding`, `ReportBundle`, severity ordering and metric-path helpers.
+- `oviqs.application.reporting`: normalization, analysis, comparison and package services.
+- `oviqs.ports.reporting`, `oviqs.ports.analysis` and `oviqs.ports.artifacts`: renderer,
+  catalog, trend and artifact protocols.
+- `oviqs.adapters.reporting`: JSON, Markdown, HTML dashboard, CSV and bundle writers.
+- `oviqs.interfaces.cli.report_commands`: the `oviq report ...` command group.
+
+Infrastructure libraries stay behind adapters or lazy application helpers: JSON Schema
+validation uses `jsonschema` when installed, CSV metrics use `pandas` when installed, and
+local trend history is a JSONL adapter behind `TrendStorePort`. Gate evaluation is exposed
+through `GateEvaluatorPort`, so CLI commands do not call gate logic directly. The report
+CLI group delegates build, analyze, render, validate and metrics-table flows to
+`ReportWorkflowService`.
+
+Concrete renderer, writer, bundle-writer, analysis-rule, gate and artifact implementations
+are assembled in the bootstrap container; CLI commands call those application services
+instead of constructing reporting pipelines inline. Built-in reporters and analysis
+components are discovered through the same `pyproject.toml` entry-point registry as
+external plugins; editable source-tree execution reads those declarations directly when
+package metadata is stale.
+
+The canonical JSON report remains `EvaluationReport`. Optional fields such as `analysis`,
+`artifacts`, `report_metadata`, `ui_hints` and `sample_metrics_summary` are additive schema
+evolution only. Missing metrics are normalized as `unknown`; renderers must show them rather
+than treating them as pass or zero. Persisted reports are normalized through
+`oviqs.application.reporting.schema_normalization` at the report-reader boundary and must
+already declare the current versioned contract before analysis, gates or rendering.
+
+Renderers consume only `ReportViewModel` objects prepared by application services. Business
+findings, deltas and outlier detection live in `oviqs.application.reporting`, not in
+Markdown or HTML templates. Canonical report enrichment is handled by
+`ReportGenerationService`; bundle packaging is exposed through `ReportBundleWriterPort`.
+Report bundle writes go through artifact and sample-metric ports so application services
+orchestrate the bundle layout without owning filesystem write mechanics. Standalone
+`report analyze`, `report render` and `reference-comparison` commands follow the same
+artifact-port write path. Reference-comparison rendering is exposed through
+`ReferenceComparisonRendererPort`; file persistence stays outside that renderer port.
 
 ## GPU Metric Verification
 

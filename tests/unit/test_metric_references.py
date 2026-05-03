@@ -1,12 +1,13 @@
 import json
 
+from oviqs.adapters.reporting import CanonicalReportWriter
 from oviqs.domain.references import (
     build_report_reference_manifest,
     get_metric_reference,
     list_metric_references,
     require_metric_reference,
 )
-from oviqs.domain.reports import EvaluationReport, ReportRun, write_report
+from oviqs.domain.reports import EvaluationReport, ReportRun
 
 
 def test_key_metrics_have_degradation_references():
@@ -72,7 +73,7 @@ def test_write_report_populates_metric_references(tmp_path):
         likelihood={"nll": 1.0, "perplexity": 2.718, "num_tokens": 8},
         rag={"context_precision": 1.0, "supported_claim_ratio": None},
     )
-    write_report(report, out)
+    CanonicalReportWriter().write(report, out)
     payload = json.loads(out.read_text(encoding="utf-8"))
     assert "metric_references" in payload
     assert "nll" in payload["metric_references"]["likelihood"]

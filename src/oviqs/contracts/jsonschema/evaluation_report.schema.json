@@ -39,6 +39,103 @@
     "metric_references": {
       "type": "object",
       "additionalProperties": true
+    },
+    "analysis": {
+      "type": "object",
+      "properties": {
+        "summary": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "findings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "title", "severity", "category", "status"],
+            "properties": {
+              "id": { "type": "string" },
+              "title": { "type": "string" },
+              "severity": {
+                "type": "string",
+                "enum": ["none", "low", "medium", "high", "critical"]
+              },
+              "category": { "type": "string" },
+              "status": {
+                "type": "string",
+                "enum": ["pass", "warning", "fail", "unknown"]
+              },
+              "evidence_paths": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "impact": { "type": "string" },
+              "recommendation": { "type": "string" }
+            },
+            "additionalProperties": true
+          }
+        },
+        "metrics": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["path", "section", "name", "status", "severity"],
+            "properties": {
+              "path": { "type": "string" },
+              "section": { "type": "string" },
+              "name": { "type": "string" },
+              "value": { "type": ["number", "integer", "string", "boolean", "null"] },
+              "status": {
+                "type": "string",
+                "enum": ["pass", "warning", "fail", "unknown"]
+              },
+              "severity": {
+                "type": "string",
+                "enum": ["none", "low", "medium", "high", "critical"]
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "biggest_regressions": { "type": "array" },
+        "biggest_improvements": { "type": "array" },
+        "unknown_metrics": { "type": "array" },
+        "sample_outliers": { "type": "array" },
+        "trend_points": { "type": "array" }
+      },
+      "additionalProperties": true
+    },
+    "artifacts": {
+      "type": "object",
+      "properties": {
+        "report_json": { "type": "string" },
+        "analysis_json": { "type": "string" },
+        "metrics_csv": { "type": "string" },
+        "sample_metrics_jsonl": { "type": "string" },
+        "index_md": { "type": "string" },
+        "dashboard_html": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "report_metadata": {
+      "type": "object",
+      "properties": {
+        "bundle_root": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "ui_hints": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "sample_metrics_summary": {
+      "type": "object",
+      "properties": {
+        "outliers": { "type": "array" }
+      },
+      "additionalProperties": true
+    },
+    "raw_sample_metrics_uri": {
+      "type": ["string", "null"]
     }
   },
   "additionalProperties": true

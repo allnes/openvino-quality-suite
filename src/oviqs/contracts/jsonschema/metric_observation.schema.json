@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/allnes/openvino-quality-suite/blob/main/src/oviqs/contracts/jsonschema/metric_observation.schema.json",
+  "title": "OVIQS Metric Observation",
+  "type": "object",
+  "required": ["path", "section", "name", "status", "severity"],
+  "properties": {
+    "path": { "type": "string" },
+    "section": { "type": "string" },
+    "name": { "type": "string" },
+    "value": { "type": ["number", "integer", "string", "boolean", "null"] },
+    "unit": { "type": ["string", "null"] },
+    "status": { "type": "string", "enum": ["pass", "warning", "fail", "unknown"] },
+    "severity": { "type": "string", "enum": ["none", "low", "medium", "high", "critical"] },
+    "reference_id": { "type": ["string", "null"] },
+    "degradation_rule": { "type": ["string", "null"] },
+    "baseline_value": { "type": ["number", "integer", "null"] },
+    "delta_abs": { "type": ["number", "null"] },
+    "delta_rel": { "type": ["number", "null"] },
+    "threshold": { "type": ["number", "integer", "null"] },
+    "threshold_rule": { "type": ["string", "null"] },
+    "sample_count": { "type": ["integer", "null"] },
+    "tags": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}

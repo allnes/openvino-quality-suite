@@ -36,3 +36,5 @@ class ReportResponse(BaseModel):
     run_id: str
     overall_status: str
     report: dict[str, Any]
+    analysis: dict[str, Any]
+    metrics: list[dict[str, Any]]

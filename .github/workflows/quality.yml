@@ -71,7 +71,7 @@ jobs:
   tests-matrix:
     name: Tests / Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
-    needs: quality
+    needs: contracts
     timeout-minutes: 20
 
     strategy:
@@ -94,3 +94,36 @@ jobs:
 
       - name: Run pytest compatibility matrix
         run: uv run pytest -q
+
+  contracts:
+    name: Contract tests
+    runs-on: ubuntu-latest
+    needs: quality
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install project and dev dependencies
+        run: uv sync --extra dev
+
+      - name: Run reporting contract tests
+        run: |
+          set -o pipefail
+          uv run pytest tests/contracts -q 2>&1 | tee contracts.log
+
+      - name: Upload contract test log
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: contract-tests-log
+          path: contracts.log
+          if-no-files-found: ignore
+          retention-days: 14

@@ -6,7 +6,8 @@ from oviqs.ports.observability import MetricsSinkPort, TraceSinkPort
 from oviqs.ports.plugins import PluginRegistryPort
 from oviqs.ports.reporting import (
     EvaluationReportWriterPort,
-    ReferenceComparisonWriterPort,
+    ReferenceComparisonRendererPort,
+    ReportBundleWriterPort,
     ReportIOPort,
     ReportReaderPort,
     ReportRendererPort,
@@ -35,7 +36,8 @@ __all__ = [
     "MetricsSinkPort",
     "ModelRegistryPort",
     "PluginRegistryPort",
-    "ReferenceComparisonWriterPort",
+    "ReferenceComparisonRendererPort",
+    "ReportBundleWriterPort",
     "ReportIOPort",
     "ReportReaderPort",
     "ReportRendererPort",

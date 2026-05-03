@@ -1,0 +1,11 @@
+<!doctype html>
+<title>OVIQS Report snapshot-run</title>
+<h2>Top Findings</h2>
+<h2>Biggest Regressions</h2>
+<h2>Diagnostic Cards</h2>
+Precision
+<canvas id="statusChart"
+<input id="q" aria-label="Search metrics"
+Raw Embedded Data
+<a href="report.json">report.json</a>
+<a href="analysis.json">analysis.json</a>
