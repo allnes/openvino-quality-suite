@@ -1,0 +1,3 @@
+# `oviqs.cli`
+
+::: oviqs.cli

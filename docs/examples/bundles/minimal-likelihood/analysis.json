@@ -1,0 +1,13 @@
+{
+  "findings": [],
+  "metrics": [
+    {
+      "name": "perplexity",
+      "path": "likelihood.perplexity",
+      "section": "likelihood",
+      "status": "unknown",
+      "value": 2.718281828
+    }
+  ],
+  "schema_version": "openvino_report_analysis_v1"
+}

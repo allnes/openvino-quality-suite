@@ -9,8 +9,9 @@ Use this skill for hands-on evaluation runs in this repository.
 
 ## Workflow
 
-1. Read `README.md`, `docs/usage.md`, `docs/data_formats.md` and
-   `docs/reports_and_gates.md` only as needed.
+1. Read `README.md`, `docs/start/quickstart.md`, `docs/reference/cli/index.md`,
+   `docs/reference/reporting/reporting-spec.md` and `docs/reference/reporting/bundle-layout.md`
+   only as needed.
 2. Use `uv run ...` for quality-gated commands and `.venv/bin/...` only when working in an
    already-created local environment.
 3. Choose the backend:
@@ -26,11 +27,11 @@ Use this skill for hands-on evaluation runs in this repository.
    `configs/examples/genai_metric_models.yaml` to choose models and export variants.
 7. Use `oviq list-metric-references` before trusting or changing gates.
 8. Write generated reports outside source paths, preferably `/tmp` or ignored `reports/`.
-9. Run `oviq compare` with `configs/gates/default_gates.yaml` when thresholds matter.
+9. Run `oviq report analyze` with `configs/gates/default_gates.yaml` when thresholds matter.
 10. Use `oviq report build` for report bundles with analysis, CSV metrics, Markdown,
     HTML dashboard and sample-level JSONL artifacts.
 11. Use `oviq report render` for standalone Markdown or HTML rendering from a bundle.
-12. Use `oviq report reference-comparison` when comparing metric values across reports.
+12. Use `oviq report reference-comparison` when comparing metric values across several reports.
 
 ## Guardrails
 
@@ -56,9 +57,10 @@ Use this skill for hands-on evaluation runs in this repository.
 .venv/bin/oviq run-gpu-suite --model models/sshleifer--tiny-gpt2-eval_logits --backend openvino-runtime --dataset /tmp/likelihood.jsonl --device GPU --out /tmp/gpu_suite.json
 .venv/bin/oviq list-genai-models --tier smoke --metric likelihood
 .venv/bin/oviq list-metric-references --family rag --json
-.venv/bin/oviq compare --baseline /tmp/likelihood.json --current /tmp/likelihood.json --gates configs/gates/default_gates.yaml --out /tmp/comparison.json
-.venv/bin/oviq report build --report /tmp/likelihood.json --out /tmp/likelihood-report --format all
-.venv/bin/oviq report render --bundle /tmp/likelihood-report --format markdown --out /tmp/likelihood.md
+.venv/bin/oviq report validate --report /tmp/likelihood.json
+.venv/bin/oviq report analyze --report /tmp/likelihood.json --baseline /tmp/baseline.json --gates configs/gates/default_gates.yaml --out /tmp/analysis.json
+.venv/bin/oviq report build --report /tmp/likelihood.json --baseline /tmp/baseline.json --gates configs/gates/default_gates.yaml --out /tmp/likelihood-bundle --format all
+.venv/bin/oviq report render --bundle /tmp/likelihood-bundle --out /tmp/likelihood.md --format markdown
 .venv/bin/oviq report reference-comparison --report baseline=/tmp/baseline.json --report current=/tmp/current.json --format markdown-transposed --out /tmp/reference_comparison.md
 uv run pre-commit run --all-files --show-diff-on-failure
 ```

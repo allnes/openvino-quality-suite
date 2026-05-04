@@ -1,0 +1,3 @@
+# `oviqs.version`
+
+::: oviqs.version

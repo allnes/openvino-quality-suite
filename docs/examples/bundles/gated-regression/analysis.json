@@ -1,0 +1,27 @@
+{
+  "findings": [
+    {
+      "message": "Perplexity exceeded the maximum allowed value.",
+      "path": "likelihood.perplexity",
+      "severity": "high",
+      "status": "fail"
+    }
+  ],
+  "metrics": [
+    {
+      "name": "perplexity",
+      "path": "likelihood.perplexity",
+      "section": "likelihood",
+      "status": "fail",
+      "value": 3.935480069
+    },
+    {
+      "name": "nll",
+      "path": "likelihood.nll",
+      "section": "likelihood",
+      "status": "warning",
+      "value": 1.37
+    }
+  ],
+  "schema_version": "openvino_report_analysis_v1"
+}

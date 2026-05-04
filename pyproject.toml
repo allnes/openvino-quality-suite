@@ -55,6 +55,10 @@ dev = [
   "radon>=6.0",
   "xenon>=0.9",
   "uv>=0.5",
+  "mkdocs>=1.6",
+  "mkdocs-material>=9.5",
+  "mkdocstrings[python]>=0.25",
+  "mkdocs-gen-files>=0.5",
 ]
 
 [project.scripts]
@@ -142,7 +146,7 @@ DEP002 = [
 ]
 
 [tool.codespell]
-skip = ".git,.venv,build,dist,reports,models,cache,data,datasets,artifacts,outputs,logs,*.egg-info"
+skip = ".git,.venv,build,dist,site,reports,models,cache,data,datasets,artifacts,outputs,logs,*.egg-info"
 ignore-words-list = "nd,ot,rouge"
 
 [tool.interrogate]

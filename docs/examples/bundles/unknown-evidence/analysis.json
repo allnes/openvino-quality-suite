@@ -1,0 +1,19 @@
+{
+  "findings": [
+    {
+      "message": "Evidence was unavailable and was not substituted.",
+      "path": "likelihood",
+      "status": "unknown"
+    }
+  ],
+  "metrics": [
+    {
+      "name": "status",
+      "path": "likelihood.status",
+      "section": "likelihood",
+      "status": "unknown",
+      "value": "unknown"
+    }
+  ],
+  "schema_version": "openvino_report_analysis_v1"
+}

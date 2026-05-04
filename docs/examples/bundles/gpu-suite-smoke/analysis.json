@@ -1,0 +1,26 @@
+{
+  "findings": [
+    {
+      "message": "Generation-only backend cannot provide aligned logits.",
+      "path": "likelihood.generation.status",
+      "status": "unknown"
+    }
+  ],
+  "metrics": [
+    {
+      "name": "perplexity",
+      "path": "likelihood.perplexity",
+      "section": "likelihood",
+      "status": "warning",
+      "value": 2.944679551
+    },
+    {
+      "name": "generation.status",
+      "path": "likelihood.generation.status",
+      "section": "likelihood",
+      "status": "unknown",
+      "value": "unknown"
+    }
+  ],
+  "schema_version": "openvino_report_analysis_v1"
+}

@@ -11,7 +11,9 @@ Use this skill for optional external evaluator and dataset adapter work.
 
 Read only what is needed:
 
-- `docs/integrations.md` for adapter boundaries and install guidance.
+- `docs/developers/plugin-entry-points.md` for adapter boundaries and plugin entry points.
+- `docs/explanation/evaluation-surfaces.md` for evidence requirements and unknown semantics.
+- `docs/reference/reporting/reporting-spec.md` for report contract constraints.
 - `requirements/integrations.txt` for shared evaluator dependencies.
 - `requirements/lighteval.txt` for the separate LightEval environment.
 - `src/oviqs/adapters/integrations/base.py` for shared result normalization.
@@ -33,7 +35,8 @@ Read only what is needed:
    dependencies lazy.
 8. Keep `requirements/integrations.txt`, `requirements/lighteval.txt`, `pyproject.toml`
    extras and `uv.lock` aligned when dependency pins change.
-9. Run targeted adapter tests while iterating, then the unified `uv run pre-commit
+9. Update MkDocs developer/reference pages when integration behavior becomes public.
+10. Run targeted adapter tests while iterating, then the unified `uv run pre-commit
    run --all-files --show-diff-on-failure` gate for release-facing dependency or
    import-boundary changes.
 

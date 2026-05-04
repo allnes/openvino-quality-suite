@@ -1,0 +1,26 @@
+{
+  "findings": [
+    {
+      "message": "Perplexity remains within the reference threshold.",
+      "path": "likelihood.perplexity",
+      "status": "pass"
+    }
+  ],
+  "metrics": [
+    {
+      "name": "perplexity",
+      "path": "likelihood.perplexity",
+      "section": "likelihood",
+      "status": "pass",
+      "value": 2.484322533
+    },
+    {
+      "name": "nll",
+      "path": "likelihood.nll",
+      "section": "likelihood",
+      "status": "pass",
+      "value": 0.91
+    }
+  ],
+  "schema_version": "openvino_report_analysis_v1"
+}

@@ -1,12 +1,13 @@
-# OVIQS: OpenVINO Inference Quality Suite
+# OVIQS
 
-OVIQS is an OpenVINO-first diagnostic library for LLM inference quality. It separates
-logits-level metrics such as NLL, PPL, KL, JS and entropy drift from generation,
-serving, RAG and agent-level evaluation.
+OpenVINO Inference Quality Suite for LLM diagnostics.
 
-Project status: early `0.1.0` implementation scaffold with working core metrics,
-runner interfaces, CLI commands, gates and report rendering. OpenVINO-dependent
-paths are optional and require exported models plus the matching extras.
+OVIQS helps you evaluate logits-level quality, generation behavior, serving
+stability, RAG outputs and agent traces, then publish versioned report bundles
+for humans and automation.
+
+Project status: pre-release. Report schemas are versioned contracts; Python
+module paths may still change before the first stable release.
 
 ## Quick start
 
@@ -26,10 +27,11 @@ oviq eval-likelihood --model dummy --backend dummy --dataset /tmp/likelihood.jso
 Compare a report against gates and render Markdown:
 
 ```bash
-oviq compare --baseline /tmp/likelihood.json --current /tmp/likelihood.json \
-  --gates configs/gates/default_gates.yaml --out /tmp/comparison.json
+oviq report analyze --report /tmp/likelihood.json \
+  --gates configs/gates/default_gates.yaml --out /tmp/likelihood-analysis.json
 oviq report build --report /tmp/likelihood.json --out /tmp/likelihood-report --format all
 oviq report render --bundle /tmp/likelihood-report --format markdown --out /tmp/likelihood.md
+oviq report validate --report /tmp/likelihood-report/report.json
 ```
 
 ## OpenVINO export examples
@@ -68,9 +70,12 @@ that exposes logits.
 - `oviq eval-agent`: tool-use, grounding, state drift, completion and recovery metrics.
 - `oviq run-suite`: suite config entry point.
 - `oviq run-gpu-suite`: GPU metric verification scorecard for exported OpenVINO models.
-- `oviq compare`: threshold gates over report metrics.
-- `oviq report build/analyze/render/metrics-table/validate`: production report bundle,
-  normalized metric observations, findings, Markdown, HTML and CSV artifacts.
+- `oviq compare`: compact baseline/current comparison JSON.
+- `oviq report build`: build a report bundle with JSON, Markdown, HTML and CSV outputs.
+- `oviq report analyze`: analyze a report against optional baseline and gates.
+- `oviq report render`: render an existing report bundle.
+- `oviq report metrics-table`: flatten scalar metrics to CSV.
+- `oviq report validate`: validate an `EvaluationReport` JSON file.
 - `oviq report reference-comparison`: compare reference-backed metrics across reports.
 - `oviq metric-long-context`: utility for position-bucketed long-context metrics.
 - `oviq list-genai-models`: inspect the recommended GenAI model matrix.
@@ -96,7 +101,8 @@ and gates treat unreferenced metrics as `unknown`.
 ## GenAI model matrix
 
 Recommended GenAI models for metric testing are tracked in
-`configs/examples/genai_metric_models.yaml` and documented in `docs/genai_model_matrix.md`.
+`configs/examples/genai_metric_models.yaml` and exposed through the generated CLI
+reference.
 
 ```bash
 .venv/bin/oviq list-genai-models --tier smoke --metric likelihood
@@ -105,19 +111,13 @@ Recommended GenAI models for metric testing are tracked in
 
 ## Documentation map
 
+- [Documentation portal](docs/index.md)
 - [Security policy](SECURITY.md)
-- [Architecture](docs/architecture.md)
-- [Usage](docs/usage.md)
-- [Data formats](docs/data_formats.md)
-- [Metrics](docs/metrics.md)
-- [Metric playbook](docs/metric_playbook.md)
-- [OpenVINO runners](docs/openvino_runners.md)
-- [GenAI model matrix](docs/genai_model_matrix.md)
-- [Reports and gates](docs/reports_and_gates.md)
-- [Long context](docs/long_context.md)
-- [RAG and agent diagnostics](docs/rag_agent.md)
-- [Integrations](docs/integrations.md)
-- [CI/CD](docs/ci_cd.md)
-- [Repo-local skills](docs/skills.md)
-- [Remote GPU from scratch](docs/remote_gpu_from_scratch.md)
-- [GPU requirements](docs/gpu_requirements.md)
+- [Quickstart](docs/start/quickstart.md)
+- [Architecture](docs/explanation/architecture.md)
+- [CLI reference](docs/reference/cli/index.md)
+- [Reporting spec](docs/reference/reporting/reporting-spec.md)
+- [JSON schemas](docs/reference/schemas/evaluation-report.md)
+- [Metric catalogue](docs/reference/metrics/catalogue.md)
+- [Developer guides](docs/developers/index.md)
+- [Project governance](docs/project/contributing.md)

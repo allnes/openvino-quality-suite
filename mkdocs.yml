@@ -1,0 +1,107 @@
+site_name: OVIQS
+site_description: OpenVINO Inference Quality Suite documentation
+site_url: https://openvino-quality-suite.readthedocs.io/
+repo_url: https://github.com/allnes/openvino-quality-suite
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  language: en
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.footer
+    - content.code.copy
+    - search.suggest
+    - search.highlight
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+          options:
+            docstring_style: google
+            show_source: true
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+validation:
+  nav:
+    omitted_files: warn
+  links:
+    absolute_links: relative_to_docs
+    anchors: warn
+    unrecognized_links: warn
+
+not_in_nav: |
+  /reference/cli/*.md
+  /reference/api/oviqs/**
+  /examples/bundles/*/index.md
+
+nav:
+  - Home: index.md
+  - Start here:
+      - Overview: start/index.md
+      - Quickstart: start/quickstart.md
+      - Installation: start/installation.md
+  - Tutorials:
+      - First local run: tutorials/first-local-run.md
+      - Build a report bundle: tutorials/build-a-report-bundle.md
+      - Compare against a baseline: tutorials/compare-against-a-baseline.md
+      - Run the GPU suite: tutorials/run-the-gpu-suite.md
+  - How-to guides:
+      - Run a suite: how-to/run-a-suite.md
+      - Validate a report: how-to/validate-a-report.md
+      - Generate a metrics table: how-to/generate-a-metrics-table.md
+      - Use trend history: how-to/use-trend-history.md
+      - Configure gates: how-to/configure-gates.md
+      - Integrate in CI: how-to/integrate-in-ci.md
+      - Troubleshoot reporting: how-to/troubleshoot-reporting.md
+  - Explanation:
+      - Architecture: explanation/architecture.md
+      - Evaluation surfaces: explanation/evaluation-surfaces.md
+      - Reporting model: explanation/reporting-model.md
+      - Metric philosophy: explanation/metric-philosophy.md
+  - Reference:
+      - CLI: reference/cli/index.md
+      - API: reference/api/index.md
+      - Reporting:
+          - Reporting spec: reference/reporting/reporting-spec.md
+          - Bundle layout: reference/reporting/bundle-layout.md
+          - Analysis model: reference/reporting/analysis-model.md
+      - Schemas:
+          - Evaluation report: reference/schemas/evaluation-report.md
+          - Evaluation request: reference/schemas/eval-request.md
+          - Report bundle: reference/schemas/report-bundle.md
+          - Metric observation: reference/schemas/metric-observation.md
+          - Sample metric: reference/schemas/sample-metric.md
+      - Metrics:
+          - Catalogue: reference/metrics/catalogue.md
+          - References and oracles: reference/metrics/references-and-oracles.md
+      - Config:
+          - Profiles: reference/config/profiles.md
+          - Gates: reference/config/gates.md
+  - Developers:
+      - Overview: developers/index.md
+      - Add a metric: developers/adding-a-metric.md
+      - Add an analysis rule: developers/adding-an-analysis-rule.md
+      - Add a renderer: developers/adding-a-renderer.md
+      - Plugin entry points: developers/plugin-entry-points.md
+      - Testing and quality: developers/testing-and-quality.md
+  - Project:
+      - Contributing: project/contributing.md
+      - Code of conduct: project/code-of-conduct.md
+      - Changelog: project/changelog.md
+      - Release notes: project/release-notes.md
+      - Security: project/security.md

@@ -1,5 +1,12 @@
 # Contributing
 
+## Documentation Impact
+
+Every pull request should explicitly state whether it changes documentation,
+schemas, CLI behavior, example bundles or release notes. Use the pull request
+template checklist and update generated docs when public commands or contracts
+change.
+
 ## Quality Checks
 
 This repository uses `pre-commit` as the single mandatory quality gate.

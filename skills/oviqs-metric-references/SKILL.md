@@ -12,9 +12,11 @@ Use this skill when a metric is added to reports, gates or standard metric matri
 Read only what is needed:
 
 - `src/oviqs/domain/references/catalog.py` for the reference catalog.
-- `docs/metrics.md` for reference/oracle policy.
-- `docs/metric_playbook.md` and `docs/metric_details/*.md` for per-metric descriptions.
-- `docs/reports_and_gates.md` for manifest and gate behavior.
+- `docs/reference/metrics/catalogue.md` for public metric paths and family semantics.
+- `docs/reference/metrics/references-and-oracles.md` for reference/oracle policy.
+- `docs/reference/reporting/reporting-spec.md` and `docs/reference/reporting/bundle-layout.md`
+  for manifest, bundle and gate review behavior.
+- `docs/reference/config/gates.md` for gate syntax and review rules.
 - `src/oviqs/adapters/reporting/reference_comparison.py` for cross-report comparison output.
 - `src/oviqs/application/reporting/reference_comparison_service.py` for report comparison
   assembly.
@@ -29,12 +31,13 @@ Read only what is needed:
 4. Keep gates conservative: missing values and unreferenced metrics should be `unknown`.
 5. Use section or nested paths consistently for grouped metrics such as
    `serving.batch_invariance.mean_kl`.
-6. Keep `docs/metric_playbook.md` as the metric contents page and put detailed metric
-   prose in the matching `docs/metric_details/<family>.md` file.
+6. Keep `docs/reference/metrics/catalogue.md` as the public metric contents page and update
+   related reporting, gate or tutorial pages when the review workflow changes.
 7. Update reference comparison defaults when a metric should appear in cross-report tables.
 8. Update docs and tests when adding metric names, families or degradation rules.
-9. Keep metric docs compatible with markdownlint and public release hygiene; examples should
-   be generic and should not include generated reports or local machine details.
+9. Regenerate generated docs/examples when schema, CLI or bundle output changes.
+10. Keep metric docs compatible with markdownlint and public release hygiene; examples should
+    be generic and should not include generated reports or local machine details.
 
 ## Commands
 

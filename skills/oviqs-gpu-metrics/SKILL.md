@@ -11,9 +11,10 @@ Use this skill for GPU-specific quality verification in this repository.
 
 Read only what is needed:
 
-- `docs/gpu_requirements.md` for target GPU environment dependencies and status.
-- `docs/remote_gpu_from_scratch.md` for clean remote workspace setup.
-- `docs/genai_model_matrix.md` for model tiers and export variants.
+- `docs/tutorials/run-the-gpu-suite.md` for the public GPU workflow.
+- `docs/reference/cli/run-gpu-suite.md` for current CLI flags.
+- `docs/reference/metrics/catalogue.md` for GPU-relevant metric paths and unknown semantics.
+- `docs/how-to/integrate-in-ci.md` for report validation, bundling and CI artifact handling.
 - `configs/examples/genai_metric_models.yaml` for machine-readable model choices.
 - `configs/suites/gpu_metric_smoke.yaml` for the GPU scorecard scope.
 - `scripts/remote_gpu_validated_gpt2.sh` for a validated GPT-2 base GPU run.
@@ -37,8 +38,9 @@ Read only what is needed:
    families.
 9. Use `oviq report reference-comparison` to compare standard matrix reports across target
    models.
-10. Store generated reports under ignored `reports/` or remote workspace report paths.
-11. Keep `uv.lock`, requirements files and CI docs aligned when GPU or evaluator
+10. Build review bundles with `oviq report build` when publishing GPU results for humans.
+11. Store generated reports under ignored `reports/` or remote workspace report paths.
+12. Keep `uv.lock`, requirements files and CI docs aligned when GPU or evaluator
     dependencies change.
 
 ## Guardrails
@@ -60,5 +62,6 @@ Read only what is needed:
 .venv/bin/oviq genai-export-plan --model openai-community/gpt2 --variant eval_logits --variant genai_generation
 .venv/bin/oviq run-gpu-suite --model models/sshleifer--tiny-gpt2-eval_logits --backend openvino-runtime --dataset /tmp/likelihood.jsonl --device GPU --out reports/gpu_metric_suite.json
 PYTHONPATH=src .venv/bin/python scripts/remote_gpu_standard_metric_matrix.py --model models/openai-community--gpt2-eval-fp16 --genai-model models/openai-community--gpt2-genai-fp16 --dataset-cache data/standard-matrix --out reports/standard_metric_matrix.json
+.venv/bin/oviq report build --report reports/standard_metric_matrix.json --out reports/standard_metric_matrix-bundle --format all
 .venv/bin/oviq report reference-comparison --report gpt2=reports/standard_metric_matrix.json --format html-dashboard --out reports/standard_metric_matrix.html
 ```

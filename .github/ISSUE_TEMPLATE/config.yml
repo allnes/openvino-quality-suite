@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security reports
+    url: https://github.com/allnes/openvino-quality-suite/security
+    about: Report vulnerabilities privately when GitHub private reporting is available.

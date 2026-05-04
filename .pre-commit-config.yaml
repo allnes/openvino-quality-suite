@@ -7,7 +7,7 @@ default_stages: [pre-commit]
 
 fail_fast: false
 
-exclude: ^(\.venv|dist|build|reports|models|cache|data|datasets|artifacts|outputs|logs|.*\.egg-info)/
+exclude: ^(\.venv|dist|build|site|reports|models|cache|data|datasets|artifacts|outputs|logs|.*\.egg-info)/
 
 repos:
   # ============================================================
@@ -72,6 +72,7 @@ repos:
       - id: check-yaml
         name: syntax / yaml
         args: ["--allow-multiple-documents"]
+        exclude: ^mkdocs\.yml$
 
       - id: check-xml
         name: syntax / xml
@@ -244,6 +245,24 @@ repos:
       - id: docs-pydoclint
         name: docs / pydoclint
         entry: uv run pydoclint src tests --quiet
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: docs-generate
+        name: docs / generate reference artifacts
+        entry: >
+          uv run python scripts/docs/build_cli_reference.py &&
+          uv run python scripts/docs/build_schema_docs.py &&
+          uv run python scripts/docs/build_api_pages.py &&
+          uv run python scripts/docs/build_example_bundles.py
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: docs-mkdocs-build
+        name: docs / mkdocs strict build
+        entry: uv run mkdocs build --strict
         language: system
         pass_filenames: false
         always_run: true

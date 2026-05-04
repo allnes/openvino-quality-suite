@@ -1,0 +1,2 @@
+{"metric": "negative_log_likelihood", "sample_id": "prompt-0001", "sample_index": 0, "section": "likelihood", "status": "pass", "value": 0.88}
+{"metric": "negative_log_likelihood", "sample_id": "prompt-0002", "sample_index": 1, "section": "likelihood", "status": "pass", "value": 0.94}

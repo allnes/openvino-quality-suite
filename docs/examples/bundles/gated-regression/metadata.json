@@ -1,0 +1,14 @@
+{
+  "analysis_json": "analysis.json",
+  "baseline_report": "baseline.json",
+  "created_at": "2026-01-01T00:00:00+00:00",
+  "dashboard_html": "dashboard.html",
+  "index_md": "index.md",
+  "metadata_json": "metadata.json",
+  "metrics_csv": "metrics.csv",
+  "report_json": "report.json",
+  "root": ".",
+  "sample_metrics_jsonl": "sample_metrics.jsonl",
+  "schema_version": "openvino_llm_quality_v1",
+  "source_report": "report.json"
+}

@@ -1,0 +1,32 @@
+{
+  "likelihood": {
+    "nll": 1.37,
+    "num_tokens": 1024,
+    "perplexity": 3.935480069,
+    "status": "fail"
+  },
+  "metric_references": {
+    "likelihood.perplexity": {
+      "fail": 3.5,
+      "oracle": "lower_is_better",
+      "warning": 3.0
+    }
+  },
+  "reproducibility": {
+    "fixture": "docs"
+  },
+  "run": {
+    "created_at": "2026-01-01T00:00:00+00:00",
+    "device": "CPU",
+    "id": "docs-gated-regression",
+    "model": "docs-model",
+    "suite": "openvino_llm_quality_v1"
+  },
+  "schema_version": "openvino_llm_quality_v1",
+  "summary": {
+    "main_findings": [
+      "Perplexity regressed beyond the configured gate."
+    ],
+    "overall_status": "fail"
+  }
+}

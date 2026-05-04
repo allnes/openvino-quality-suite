@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc" viewBox="0 0 960 540">
+  <title id="title">OVIQS dashboard mockup</title>
+  <desc id="desc">A mock dashboard with summary status, findings and metric cards.</desc>
+  <rect width="960" height="540" fill="#f7f8fa"/>
+  <rect x="48" y="40" width="864" height="92" rx="8" fill="#ffffff" stroke="#c7ccd1"/>
+  <text x="72" y="82" font-family="Arial, sans-serif" font-size="28" fill="#1f2933">OVIQS report dashboard</text>
+  <text x="72" y="112" font-family="Arial, sans-serif" font-size="16" fill="#52606d">Overall status: unknown</text>
+  <rect x="48" y="164" width="264" height="140" rx="8" fill="#ffffff" stroke="#c7ccd1"/>
+  <rect x="348" y="164" width="264" height="140" rx="8" fill="#ffffff" stroke="#c7ccd1"/>
+  <rect x="648" y="164" width="264" height="140" rx="8" fill="#ffffff" stroke="#c7ccd1"/>
+  <text x="72" y="202" font-family="Arial, sans-serif" font-size="20" fill="#1f2933">Likelihood</text>
+  <text x="372" y="202" font-family="Arial, sans-serif" font-size="20" fill="#1f2933">Findings</text>
+  <text x="672" y="202" font-family="Arial, sans-serif" font-size="20" fill="#1f2933">Bundle artifacts</text>
+  <text x="72" y="238" font-family="Arial, sans-serif" font-size="15" fill="#52606d">PPL: 2.718</text>
+  <text x="372" y="238" font-family="Arial, sans-serif" font-size="15" fill="#52606d">0 high, 0 critical</text>
+  <text x="672" y="238" font-family="Arial, sans-serif" font-size="15" fill="#52606d">JSON, CSV, MD, HTML</text>
+  <rect x="48" y="336" width="864" height="140" rx="8" fill="#ffffff" stroke="#c7ccd1"/>
+  <text x="72" y="376" font-family="Arial, sans-serif" font-size="20" fill="#1f2933">Normalized metrics table</text>
+  <line x1="72" y1="408" x2="888" y2="408" stroke="#c7ccd1"/>
+  <line x1="72" y1="442" x2="888" y2="442" stroke="#e4e7eb"/>
+</svg>

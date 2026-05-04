@@ -1,0 +1,36 @@
+{
+  "likelihood": {
+    "generation": {
+      "reason": "OpenVINO GenAI generation path does not expose logits.",
+      "status": "unknown"
+    },
+    "nll": 1.08,
+    "num_tokens": 2048,
+    "perplexity": 2.944679551,
+    "status": "warning"
+  },
+  "metric_references": {
+    "likelihood.perplexity": {
+      "fail": 3.5,
+      "oracle": "lower_is_better",
+      "warning": 3.0
+    }
+  },
+  "reproducibility": {
+    "fixture": "docs"
+  },
+  "run": {
+    "created_at": "2026-01-01T00:00:00+00:00",
+    "device": "GPU",
+    "id": "docs-gpu-suite-smoke",
+    "model": "docs-model",
+    "suite": "openvino_llm_quality_v1"
+  },
+  "schema_version": "openvino_llm_quality_v1",
+  "summary": {
+    "main_findings": [
+      "GPU runtime checks passed; GenAI aligned logits were unavailable."
+    ],
+    "overall_status": "warning"
+  }
+}

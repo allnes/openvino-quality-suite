@@ -26,15 +26,21 @@ Use this skill for code and documentation changes in this repository.
    rely on reference/oracle metadata to decide whether a metric is quality-gate ready.
 9. Add focused tests for metric math, schemas, gates, metric references, model-matrix
    behavior, adapters, architecture boundaries and CLI behavior affected by the change.
-10. Update `docs/metric_playbook.md` and the matching `docs/metric_details/*.md` file when
-   adding or renaming a reported metric.
-11. Keep architecture, usage, contract and skills docs current when package layout, entry
-    points, profiles, ports or public interfaces change.
+10. Update `docs/reference/metrics/catalogue.md`,
+    `docs/reference/metrics/references-and-oracles.md` and related tutorial/how-to pages when
+    adding or renaming a reported metric.
+11. Keep `docs/explanation/architecture.md`, `docs/reference/reporting/reporting-spec.md`,
+    `docs/reference/schemas/*.md`, CLI reference pages and skills current when package layout,
+    entry points, profiles, ports or public interfaces change.
 12. Keep reporting changes split across domain reporting models, application reporting
     services, ports and adapters; CLI commands should call `ReportWorkflowService`.
 13. Keep CI and packaging metadata current when dependencies or validation tooling change.
 14. Run the unified quality gate with `uv run pre-commit run --all-files`.
-15. When editing CI, keep diagnostic uploads limited to generated public-safe artifacts such
+15. When editing MkDocs documentation, regenerate generated references before committing:
+    `scripts/docs/build_cli_reference.py`, `scripts/docs/build_schema_docs.py`,
+    `scripts/docs/build_api_pages.py`, `scripts/docs/build_example_bundles.py`, then
+    `mkdocs build --strict`.
+16. When editing CI, keep diagnostic uploads limited to generated public-safe artifacts such
     as pre-commit logs, coverage XML and package distributions; keep local paths and
     operator notes out of committed docs and skills, and use short retention for
     diagnostic-only artifacts.
@@ -47,6 +53,7 @@ Prefer the narrowest checks while iterating:
 uv run ruff check .
 uv run ruff format --check .
 uv run pytest tests/unit
+uv run mkdocs build --strict
 ```
 
 Run integration or OpenVINO-specific tests only when the required models, devices and
@@ -76,8 +83,10 @@ The package build, wheel install smoke test, `import oviqs` and `oviq --help` ch
   command is a scorecard-style workflow.
 - Missing optional evaluators should produce omitted or `unknown` metrics, not fake scores.
 - Report JSON must remain stable enough for CI gates and downstream rendering.
+- The MkDocs source tree is under `docs/`; generated CLI, API, schema and example pages
+  should be regenerated with `scripts/docs/*` rather than edited by hand.
 - Generated reports, model exports, datasets, logs, caches, local environment files and
-  operator notes must stay out of commits.
+  operator notes must stay out of commits and publication artifacts.
 - CI artifacts are for workflow diagnosis and release packaging only; never make generated
   artifacts part of the tracked source tree.
 - Security suppressions such as `# nosec` should be narrow and explain intentional external

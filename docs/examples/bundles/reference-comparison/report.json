@@ -1,0 +1,34 @@
+{
+  "likelihood": {
+    "nll": 0.91,
+    "num_tokens": 1024,
+    "perplexity": 2.484322533,
+    "status": "pass"
+  },
+  "metric_references": {
+    "likelihood.perplexity": {
+      "fail": 3.5,
+      "oracle": "lower_is_better",
+      "warning": 3.0
+    }
+  },
+  "reproducibility": {
+    "fixture": "docs"
+  },
+  "run": {
+    "created_at": "2026-01-01T00:00:00+00:00",
+    "current": "docs-reference-current",
+    "device": "CPU",
+    "id": "docs-reference-current",
+    "model": "docs-model",
+    "reference": "docs-reference-baseline",
+    "suite": "openvino_llm_quality_v1"
+  },
+  "schema_version": "openvino_llm_quality_v1",
+  "summary": {
+    "main_findings": [
+      "Current run stays inside the documented reference threshold."
+    ],
+    "overall_status": "pass"
+  }
+}
