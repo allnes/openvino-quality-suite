@@ -26,7 +26,9 @@ Use this skill for code and documentation changes in this repository.
    rely on reference/oracle metadata to decide whether a metric is quality-gate ready.
 9. Add focused tests for metric math, schemas, gates, metric references, model-matrix
    behavior, adapters, architecture boundaries and CLI behavior affected by the change.
-10. Update `docs/reference/metrics/catalogue.md`,
+10. Update `docs/reference/metrics/playbook.md`,
+    `docs/reference/metrics/catalogue.md`, the relevant
+    `docs/reference/metrics/details/*.md` page,
     `docs/reference/metrics/references-and-oracles.md` and related tutorial/how-to pages when
     adding or renaming a reported metric.
 11. Keep `docs/explanation/architecture.md`, `docs/reference/reporting/reporting-spec.md`,

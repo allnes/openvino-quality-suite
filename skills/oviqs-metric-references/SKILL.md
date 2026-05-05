@@ -12,6 +12,8 @@ Use this skill when a metric is added to reports, gates or standard metric matri
 Read only what is needed:
 
 - `src/oviqs/domain/references/catalog.py` for the reference catalog.
+- `docs/reference/metrics/playbook.md` for reviewer-facing metric formulas, datasets and
+  triage actions.
 - `docs/reference/metrics/catalogue.md` for public metric paths and family semantics.
 - `docs/reference/metrics/references-and-oracles.md` for reference/oracle policy.
 - `docs/reference/reporting/reporting-spec.md` and `docs/reference/reporting/bundle-layout.md`
@@ -31,8 +33,9 @@ Read only what is needed:
 4. Keep gates conservative: missing values and unreferenced metrics should be `unknown`.
 5. Use section or nested paths consistently for grouped metrics such as
    `serving.batch_invariance.mean_kl`.
-6. Keep `docs/reference/metrics/catalogue.md` as the public metric contents page and update
-   related reporting, gate or tutorial pages when the review workflow changes.
+6. Keep `docs/reference/metrics/playbook.md` as the public metric contents page, keep
+   `docs/reference/metrics/catalogue.md` as the path contract, and update related
+   reporting, gate or tutorial pages when the review workflow changes.
 7. Update reference comparison defaults when a metric should appear in cross-report tables.
 8. Update docs and tests when adding metric names, families or degradation rules.
 9. Regenerate generated docs/examples when schema, CLI or bundle output changes.

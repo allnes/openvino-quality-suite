@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 import numpy as np
@@ -97,10 +98,22 @@ class OVRuntimeLogitsRunner(BaseLogitsRunner):
         if "position_ids" in self.inputs:
             batch_size = input_ids.shape[0]
             seq_len = input_ids.shape[1]
-            feeds["position_ids"] = np.broadcast_to(
+            position_ids = np.broadcast_to(
                 np.arange(seq_len, dtype=np.int64)[None, :],
                 (batch_size, seq_len),
             )
+            get_partial_shape = getattr(self.inputs["position_ids"], "get_partial_shape", None)
+            position_shape = get_partial_shape() if get_partial_shape else None
+            if position_shape is not None and len(position_shape) == 3:
+                leading_dim = position_shape[0]
+                leading = int(leading_dim.get_length()) if leading_dim.is_static else 1
+                position_ids = np.broadcast_to(
+                    position_ids[None, :, :],
+                    (leading, batch_size, seq_len),
+                )
+            feeds["position_ids"] = position_ids
+        if "token_type_ids" in self.inputs:
+            feeds["token_type_ids"] = np.zeros_like(input_ids, dtype=np.int64)
         if "cache_position" in self.inputs:
             feeds["cache_position"] = np.arange(input_ids.shape[1], dtype=np.int64)
         if "q_length" in self.inputs:
@@ -340,8 +353,15 @@ def _resolve_model_and_tokenizer(
     path = Path(model_xml_or_dir)
     if path.is_dir():
         xml_files = sorted(path.glob("*.xml"))
+        tokenizer_root = path
         if not xml_files:
-            raise FileNotFoundError(f"No OpenVINO .xml model found in {path}")
+            xml_files = sorted(path.rglob("*.xml"))
+            if not xml_files:
+                raise FileNotFoundError(f"No OpenVINO .xml model found in {path}")
+            int4_xml_files = [item for item in xml_files if "int4" in str(item.parent)]
+            if int4_xml_files:
+                xml_files = int4_xml_files
+            tokenizer_root = xml_files[0].parent
         if len(xml_files) > 1:
             preferred_names = ("openvino_model.xml", "openvino_language_model.xml")
             preferred = [
@@ -350,7 +370,7 @@ def _resolve_model_and_tokenizer(
             model_xml = preferred[0] if preferred else xml_files[0]
         else:
             model_xml = xml_files[0]
-        return model_xml, Path(tokenizer_dir) if tokenizer_dir else path
+        return model_xml, Path(tokenizer_dir) if tokenizer_dir else tokenizer_root
     return path, Path(tokenizer_dir) if tokenizer_dir else None
 
 
@@ -366,13 +386,25 @@ def _load_tokenizer(tokenizer_dir: str):
         from transformers import AutoTokenizer, PreTrainedTokenizerFast
     except ImportError as exc:
         raise OptionalDependencyError("transformers", "openvino") from exc
+    trust_remote_code = os.environ.get("OVIQS_TRUST_REMOTE_CODE") in {"1", "true", "True", "yes"}
     try:
-        return AutoTokenizer.from_pretrained(tokenizer_dir, use_fast=True)  # nosec B615
-    except ValueError:
+        return AutoTokenizer.from_pretrained(  # nosec B615
+            tokenizer_dir,
+            use_fast=True,
+            trust_remote_code=trust_remote_code,
+        )
+    except (OSError, ValueError) as exc:
+        remote_tokenizer = _remote_tokenizer_source(tokenizer_dir)
+        if remote_tokenizer is not None:
+            return AutoTokenizer.from_pretrained(  # nosec B615
+                remote_tokenizer,
+                use_fast=True,
+                trust_remote_code=True,
+            )
         tokenizer_path = Path(tokenizer_dir) / "tokenizer.json"
         tokenizer_config_path = Path(tokenizer_dir) / "tokenizer_config.json"
         if not tokenizer_path.exists():
-            raise
+            raise exc
         kwargs = {"tokenizer_file": str(tokenizer_path)}
         if tokenizer_config_path.exists():
             config = json.loads(tokenizer_config_path.read_text(encoding="utf-8"))
@@ -380,3 +412,17 @@ def _load_tokenizer(tokenizer_dir: str):
                 if config.get(key) is not None:
                     kwargs[key] = config[key]
         return PreTrainedTokenizerFast(**kwargs)
+
+
+def _remote_tokenizer_source(tokenizer_dir: str) -> str | None:
+    config_path = Path(tokenizer_dir) / "tokenizer_config.json"
+    model_config_path = Path(tokenizer_dir) / "config.json"
+    for path in (config_path, model_config_path):
+        if not path.exists():
+            continue
+        config = json.loads(path.read_text(encoding="utf-8"))
+        source = config.get("_name_or_path")
+        auto_map = config.get("auto_map")
+        if isinstance(source, str) and "/" in source and auto_map:
+            return source
+    return None

@@ -111,7 +111,9 @@ def reference_comparison(
     out: Annotated[Path, typer.Option(help="Output comparison table")],
     format: Annotated[
         str,
-        typer.Option(help="markdown, markdown-transposed, html-dashboard, csv or json"),
+        typer.Option(
+            help="markdown, markdown-transposed, html-by-model, html-dashboard, csv or json"
+        ),
     ] = "markdown",
     all_metrics: Annotated[
         bool,

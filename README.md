@@ -118,6 +118,7 @@ reference.
 - [CLI reference](docs/reference/cli/index.md)
 - [Reporting spec](docs/reference/reporting/reporting-spec.md)
 - [JSON schemas](docs/reference/schemas/evaluation-report.md)
+- [Metric playbook](docs/reference/metrics/playbook.md)
 - [Metric catalogue](docs/reference/metrics/catalogue.md)
 - [Developer guides](docs/developers/index.md)
 - [Project governance](docs/project/contributing.md)

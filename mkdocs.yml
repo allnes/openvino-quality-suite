@@ -87,8 +87,17 @@ nav:
           - Metric observation: reference/schemas/metric-observation.md
           - Sample metric: reference/schemas/sample-metric.md
       - Metrics:
+          - Metric playbook: reference/metrics/playbook.md
           - Catalogue: reference/metrics/catalogue.md
           - References and oracles: reference/metrics/references-and-oracles.md
+          - Likelihood: reference/metrics/details/likelihood.md
+          - Distribution drift: reference/metrics/details/distribution-drift.md
+          - Long context: reference/metrics/details/long-context.md
+          - Generation: reference/metrics/details/generation.md
+          - RAG: reference/metrics/details/rag.md
+          - Agent: reference/metrics/details/agent.md
+          - Serving: reference/metrics/details/serving.md
+          - Performance: reference/metrics/details/performance.md
       - Config:
           - Profiles: reference/config/profiles.md
           - Gates: reference/config/gates.md

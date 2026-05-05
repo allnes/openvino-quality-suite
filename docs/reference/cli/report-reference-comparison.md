@@ -11,8 +11,8 @@ Generated from the Typer command help.
 │                               Repeat for multiple reports.                   │
 │                               [required]                                     │
 │ *  --out                PATH  Output comparison table [required]             │
-│    --format             TEXT  markdown, markdown-transposed, html-dashboard, │
-│                               csv or json                                    │
+│    --format             TEXT  markdown, markdown-transposed, html-by-model,  │
+│                               html-dashboard, csv or json                    │
 │                               [default: markdown]                            │
 │    --all-metrics              Include every metric listed in report coverage │
 │    --help                     Show this message and exit.                    │

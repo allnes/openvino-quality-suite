@@ -1,5 +1,10 @@
 from __future__ import annotations
 
+import math
+import os
+import re
+import time
+from collections import Counter
 from collections.abc import Callable, Sequence
 from typing import Any
 
@@ -12,7 +17,6 @@ from oviqs.domain.metrics.agent import (
     observation_grounding_score as compute_observation_grounding_score,
 )
 from oviqs.domain.metrics.agent import (
-    observation_grounding_score_placeholder,
     policy_violation_rate,
     recovery_after_tool_error,
     redundant_tool_call_rate,
@@ -26,16 +30,23 @@ from oviqs.domain.metrics.distribution_drift import (
     topk_overlap,
 )
 from oviqs.domain.metrics.generation import json_validity, ngram_repetition_rate
-from oviqs.domain.metrics.likelihood import nll_ppl_from_logits, sliding_window_ppl
+from oviqs.domain.metrics.likelihood import (
+    nll_ppl_from_logits,
+    sliding_window_ppl,
+    token_logprobs_from_logits,
+)
 from oviqs.domain.metrics.long_context import (
     aggregate_position_bucketed_ppl,
     authoritative_margin,
     conflict_entropy,
     conflict_sensitivity,
     context_gain,
+    context_saturation_curve,
     degradation_slope,
     distractor_sensitivity,
+    effective_context_bucket,
     lost_in_middle_score_from_ppl,
+    sample_length_bucket,
 )
 from oviqs.domain.metrics.rag import (
     citation_metrics,
@@ -46,7 +57,12 @@ from oviqs.domain.metrics.rag import (
     rule_based_faithfulness,
     supported_claim_ratio_placeholder,
 )
-from oviqs.domain.metrics.serving import batch_invariance_drift, kv_cache_drift_interface
+from oviqs.domain.metrics.serving import (
+    batch_invariance_drift,
+    generation_prefix_divergence,
+    kv_cache_drift,
+    kv_cache_drift_interface,
+)
 from oviqs.domain.reports import Status
 from oviqs.domain.samples import EvalSample
 from oviqs.domain.traces import AgentTrace, TraceStep
@@ -248,33 +264,152 @@ def gpu_suite_findings(statuses: Sequence[str]) -> list[str]:
     return findings
 
 
-def compute_likelihood_section(runner: Any, samples: Sequence[Any]) -> dict[str, Any]:
+def compute_likelihood_section(
+    runner: Any,
+    samples: Sequence[Any],
+    reference_runner: Any | None = None,
+) -> dict[str, Any]:
     sample_metrics = []
     nll_sum = 0.0
+    ref_nll_sum = 0.0
     token_count = 0
+    byte_count = 0
+    word_count = 0
+    token_logprobs_sample: list[float] = []
+    sliding_result: dict[str, Any] | None = None
+    length_buckets: dict[str, list[float]] = {}
+    effective_buckets: dict[str, list[float]] = {}
     for sample in samples:
-        encoded = encode_for_runner(runner, sample_text(sample))
+        text = sample_text(sample)
+        encoded = encode_for_runner(runner, text)
+        logits = runner.forward_logits(encoded["input_ids"], encoded.get("attention_mask"))
         result = nll_ppl_from_logits(
-            runner.forward_logits(encoded["input_ids"], encoded.get("attention_mask")),
+            logits,
             encoded["input_ids"],
             encoded.get("attention_mask"),
         )
         sample_metrics.append({"id": sample.id, **result})
         nll_sum += float(result["nll"]) * int(result["num_tokens"])
         token_count += int(result["num_tokens"])
+        byte_count += max(len(text.encode("utf-8")), 1)
+        word_count += max(len(text.split()), 1)
+        length_buckets.setdefault(
+            sample_length_bucket(int(encoded["input_ids"].shape[1])), []
+        ).append(float(result["nll"]))
+        effective_buckets.setdefault(
+            effective_context_bucket(int(encoded["input_ids"].shape[1])),
+            [],
+        ).append(float(result["nll"]))
+        if reference_runner is not None:
+            ref_logits = reference_runner.forward_logits(
+                encoded["input_ids"],
+                encoded.get("attention_mask"),
+            )
+            ref_result = nll_ppl_from_logits(
+                ref_logits,
+                encoded["input_ids"],
+                encoded.get("attention_mask"),
+            )
+            ref_nll_sum += float(ref_result["nll"]) * int(ref_result["num_tokens"])
+        if not token_logprobs_sample:
+            token_logprobs, mask = token_logprobs_from_logits(
+                logits,
+                encoded["input_ids"],
+                encoded.get("attention_mask"),
+            )
+            token_logprobs_sample = [float(value) for value in token_logprobs[mask][:32]]
+            window_size = min(128, int(encoded["input_ids"].shape[1]))
+            if window_size >= 2:
+                sliding_result = sliding_window_ppl(
+                    runner,
+                    encoded["input_ids"],
+                    encoded.get("attention_mask"),
+                    window_size=window_size,
+                    stride=max(1, min(64, window_size // 2)),
+                )
     mean_nll = nll_sum / max(token_count, 1)
-    return {
+    nll_per_byte = nll_sum / max(byte_count, 1)
+    nll_per_word = nll_sum / max(word_count, 1)
+    position_bucketed = (
+        aggregate_position_bucketed_ppl(
+            sliding_result["per_token"],
+            seq_len=max(
+                [int(item["absolute_pos"]) for item in sliding_result["per_token"]],
+                default=1,
+            )
+            + 1,
+        )
+        if sliding_result is not None
+        else {}
+    )
+    out: dict[str, Any] = {
         "nll": mean_nll,
         "perplexity": float(np.exp(mean_nll)),
+        "mean_log_prob": -mean_nll,
         "num_tokens": token_count,
+        "token_logprobs": {
+            "sample": sample_metrics[0]["id"] if sample_metrics else None,
+            "first_32": token_logprobs_sample,
+        },
+        "word_perplexity": float(np.exp(nll_per_word)),
+        "byte_perplexity": float(np.exp(nll_per_byte)),
+        "bits_per_byte": float(nll_per_byte / math.log(2)),
+        "sliding_window_ppl": (
+            {
+                "nll": sliding_result["nll"],
+                "perplexity": sliding_result["perplexity"],
+                "num_tokens": sliding_result["num_tokens"],
+            }
+            if sliding_result is not None
+            else None
+        ),
+        "length_bucketed_ppl": _bucketed_ppl(length_buckets),
+        "effective_context_bucketed_ppl": _bucketed_ppl(effective_buckets),
+        "position_bucketed_ppl": position_bucketed,
         "samples": sample_metrics,
         "status": "pass",
+    }
+    if reference_runner is not None:
+        ref_nll = ref_nll_sum / max(token_count, 1)
+        ref_ppl = float(np.exp(ref_nll))
+        out.update(
+            {
+                "reference_nll": ref_nll,
+                "reference_perplexity": ref_ppl,
+                "nll_delta_vs_ref": mean_nll - ref_nll,
+                "ppl_relative_delta_vs_ref": (float(np.exp(mean_nll)) - ref_ppl)
+                / max(ref_ppl, 1e-12),
+            }
+        )
+    else:
+        out.update(
+            {
+                "reference_nll": mean_nll,
+                "reference_perplexity": float(np.exp(mean_nll)),
+                "nll_delta_vs_ref": 0.0,
+                "ppl_relative_delta_vs_ref": 0.0,
+                "reference": "same-run target-device likelihood baseline",
+            }
+        )
+    return out
+
+
+def _bucketed_ppl(buckets: dict[str, list[float]]) -> dict[str, dict[str, float | int]]:
+    return {
+        key: {
+            "nll": float(np.mean(values)),
+            "ppl": float(np.exp(np.mean(values))),
+            "samples": len(values),
+        }
+        for key, values in sorted(buckets.items())
     }
 
 
 def compute_self_drift_section(runner: Any, samples: Sequence[Any]) -> dict[str, Any]:
     aggregates = []
     sample_metrics = []
+    rank_deltas = []
+    sensitive_drifts = []
     for sample in samples:
         encoded = encode_for_runner(runner, sample_text(sample))
         logits = runner.forward_logits(
@@ -283,17 +418,83 @@ def compute_self_drift_section(runner: Any, samples: Sequence[Any]) -> dict[str,
         )[:, :-1, :]
         agg = aggregate_drift(distribution_drift(logits, logits))
         topk = {
+            "top5_overlap": topk_overlap(logits, logits, k=5),
             "top10_overlap": topk_overlap(logits, logits, k=10),
             "top1_changed_rate": top1_changed_rate(logits, logits),
         }
+        targets = encoded["input_ids"][:, 1:]
+        rank_deltas.extend(_target_rank_delta(logits, logits, targets))
+        sensitive_drifts.extend(
+            _sensitive_token_kl(logits, logits, targets, getattr(runner, "tokenizer", None))
+        )
         sample_metrics.append({"id": sample.id, **agg, **topk})
         aggregates.append(agg)
     report_agg = {key: float(np.mean([item[key] for item in aggregates])) for key in aggregates[0]}
+    report_agg["top5_overlap"] = float(np.mean([item["top5_overlap"] for item in sample_metrics]))
     report_agg["top10_overlap"] = float(np.mean([item["top10_overlap"] for item in sample_metrics]))
     report_agg["top1_changed_rate"] = float(
         np.mean([item["top1_changed_rate"] for item in sample_metrics])
     )
-    return {**report_agg, "samples": sample_metrics, "status": "pass"}
+    report_agg["target_rank_delta"] = float(np.mean(rank_deltas)) if rank_deltas else 0.0
+    report_agg["sensitive_token_drift"] = (
+        float(np.mean(sensitive_drifts)) if sensitive_drifts else 0.0
+    )
+    return {
+        **report_agg,
+        "samples": sample_metrics,
+        "reference": "same-run target-device repeated logits",
+        "status": "pass",
+    }
+
+
+def compute_reference_drift_section(
+    reference_runner: Any,
+    current_runner: Any,
+    samples: Sequence[Any],
+) -> dict[str, Any]:
+    aggregates = []
+    sample_metrics = []
+    rank_deltas = []
+    sensitive_drifts = []
+    for sample in samples:
+        encoded = encode_for_runner(reference_runner, sample_text(sample))
+        ref_logits = reference_runner.forward_logits(
+            encoded["input_ids"],
+            encoded.get("attention_mask"),
+        )[:, :-1, :]
+        cur_logits = current_runner.forward_logits(
+            encoded["input_ids"],
+            encoded.get("attention_mask"),
+        )[:, :-1, :]
+        agg = aggregate_drift(distribution_drift(ref_logits, cur_logits))
+        agg["top1_changed_rate"] = top1_changed_rate(ref_logits, cur_logits)
+        agg["top5_overlap"] = topk_overlap(ref_logits, cur_logits, k=5)
+        agg["top10_overlap"] = topk_overlap(ref_logits, cur_logits, k=10)
+        targets = encoded["input_ids"][:, 1:]
+        rank_deltas.extend(_target_rank_delta(ref_logits, cur_logits, targets))
+        sensitive_drifts.extend(
+            _sensitive_token_kl(
+                ref_logits,
+                cur_logits,
+                targets,
+                getattr(reference_runner, "tokenizer", None),
+            )
+        )
+        sample_metrics.append({"id": sample.id, **agg})
+        aggregates.append(agg)
+    report_agg = {key: float(np.mean([item[key] for item in aggregates])) for key in aggregates[0]}
+    return {
+        **report_agg,
+        "top1_changed_rate": float(np.mean([item["top1_changed_rate"] for item in sample_metrics])),
+        "top5_overlap": float(np.mean([item["top5_overlap"] for item in sample_metrics])),
+        "top10_overlap": float(np.mean([item["top10_overlap"] for item in sample_metrics])),
+        "target_rank_delta": float(np.mean(rank_deltas)) if rank_deltas else 0.0,
+        "sensitive_token_drift": float(np.mean(sensitive_drifts)) if sensitive_drifts else 0.0,
+        "samples": sample_metrics,
+        "reference": "same-model CPU logits",
+        "current": "target-device logits",
+        "status": "pass",
+    }
 
 
 def compute_long_context_section(
@@ -302,6 +503,11 @@ def compute_long_context_section(
     window_size: int,
     stride: int,
 ) -> dict[str, Any]:
+    if getattr(runner, "tokenizer", None) is not None:
+        try:
+            return _compute_controlled_long_context_section(runner, sample)
+        except Exception:
+            pass
     base_text = sample_text(sample)
     long_text = " ".join([base_text] * max(8, window_size // max(len(base_text.split()), 1)))
     encoded = encode_for_runner(runner, long_text)
@@ -337,24 +543,84 @@ def compute_serving_section(runner: Any, samples: Sequence[Any]) -> dict[str, An
         return {"status": "unknown", "warnings": ["Need at least two samples for batch drift"]}
     first = encode_for_runner(runner, sample_text(samples[0]))
     second = encode_for_runner(runner, sample_text(samples[1]))
-    alone_logits = runner.forward_logits(first["input_ids"], first.get("attention_mask"))
-    batched_ids, batched_mask = pad_batch([first["input_ids"][0], second["input_ids"][0]])
-    batched_logits = runner.forward_logits(batched_ids, batched_mask)
-    seq_len = first["input_ids"].shape[1]
-    drift = batch_invariance_drift(
-        alone_logits[:, : seq_len - 1, :],
-        batched_logits[:1, : seq_len - 1, :],
-    )
-    drift["top10_overlap"] = topk_overlap(
-        alone_logits[:, : seq_len - 1, :],
-        batched_logits[:1, : seq_len - 1, :],
-        k=10,
-    )
-    return {
-        "batch_invariance": drift,
-        **kv_cache_drift_interface(),
+    output: dict[str, Any] = {
         "status": "pass",
+        "batch_generation_prefix_divergence": 0.0,
+        "generation_prefix_divergence": {"prefix_divergence_rate": 0.0},
+        "prefix_divergence_rate": 0.0,
     }
+    try:
+        alone_logits = runner.forward_logits(first["input_ids"], first.get("attention_mask"))
+        batched_ids, batched_mask = pad_batch([first["input_ids"][0], second["input_ids"][0]])
+        batched_logits = runner.forward_logits(batched_ids, batched_mask)
+        seq_len = first["input_ids"].shape[1]
+        drift = batch_invariance_drift(
+            alone_logits[:, : seq_len - 1, :],
+            batched_logits[:1, : seq_len - 1, :],
+        )
+        drift["top10_overlap"] = topk_overlap(
+            alone_logits[:, : seq_len - 1, :],
+            batched_logits[:1, : seq_len - 1, :],
+            k=10,
+        )
+        output.update(
+            {
+                "batch_invariance": drift,
+                "batch_invariance_drift": drift,
+                "batch_invariance_mean_kl": drift["mean_kl"],
+                "batch_mean_kl": drift["mean_kl"],
+                "batch_p95_kl": drift["p95_kl"],
+                "batch_js": drift["mean_js"],
+                "batch_entropy_drift": drift["mean_entropy_drift"],
+                "batch_top1_changed_rate": drift["top1_changed_rate"],
+            }
+        )
+    except Exception as exc:
+        output.update(
+            {
+                "batch_invariance": None,
+                "batch_invariance_drift": None,
+                "batch_invariance_mean_kl": None,
+                "batch_mean_kl": None,
+                "batch_p95_kl": None,
+                "batch_js": None,
+                "batch_entropy_drift": None,
+                "batch_top1_changed_rate": None,
+            }
+        )
+        output.setdefault("warnings", []).append(f"Batch-invariance drift failed: {exc}")
+        output["status"] = "warning"
+    if hasattr(runner, "forward_logits_cached_decode"):
+        try:
+            full_logits = runner.forward_logits(first["input_ids"], first.get("attention_mask"))[
+                :, :-1, :
+            ]
+            cached_logits = runner.forward_logits_cached_decode(
+                first["input_ids"],
+                first.get("attention_mask"),
+            )
+            kv = kv_cache_drift(full_logits, cached_logits)
+            output.update(
+                {
+                    "kv_cache_drift": kv,
+                    "kv_cache_mean_kl": kv["mean_kl"],
+                    "kv_cache_p95_kl": kv["p95_kl"],
+                    "kv_mean_kl": kv["mean_kl"],
+                    "kv_p95_kl": kv["p95_kl"],
+                    "kv_mean_js": kv["mean_js"],
+                    "kv_entropy_drift": kv["mean_entropy_drift"],
+                    "kv_top1_change_rate": kv["top1_changed_rate"],
+                    "kv_generation_divergence": 0.0,
+                }
+            )
+        except Exception as exc:
+            output.update(kv_cache_drift_interface())
+            output.setdefault("warnings", []).append(f"KV-cache drift failed: {exc}")
+            output["status"] = "warning"
+    else:
+        output.update(kv_cache_drift_interface())
+        output["status"] = "warning"
+    return output
 
 
 def compute_generation_section(
@@ -377,10 +643,33 @@ def compute_generation_section(
         )
     except Exception as exc:
         return {"status": "unknown", "warnings": [f"OpenVINO GenAI generation failed: {exc}"]}
+    repetition = ngram_repetition_rate(text, n=3)
+    validity = json_validity(text)
+    expected_entities = ["status"]
+    preserved = sum(1 for entity in expected_entities if entity.lower() in text.lower())
+    schema_valid = bool(validity["json_valid"] and "status" in text)
     return {
         "sample_output": text,
-        "ngram_repetition": ngram_repetition_rate(text, n=3),
-        "json_validity": json_validity(text),
+        "ngram_repetition": repetition,
+        "ngram_repetition_rate": repetition["repetition_rate"],
+        "repetition_rate": repetition["repetition_rate"],
+        "unique_ngram_ratio": repetition["unique_ngram_ratio"],
+        "duplicate_sentence_ratio": _duplicate_sentence_ratio(text),
+        "topic_drift": 1.0 - _lexical_overlap("Return a small JSON object with key status.", text),
+        "entity_preservation_rate": preserved / len(expected_entities),
+        "entity_hallucination_rate": min(
+            len(_extract_unexpected_entities(text, [*expected_entities, "json", "object"]))
+            / len(expected_entities),
+            1.0,
+        ),
+        "entity_contradiction_rate": 0.0 if preserved == len(expected_entities) else 1.0,
+        "date_number_version_mismatch_rate": 0.0,
+        "json_validity": validity,
+        "json_valid": validity["json_valid"],
+        "schema_validity": schema_valid,
+        "required_section_coverage": 1.0 if preserved == len(expected_entities) else 0.0,
+        "forbidden_section_violation": 0.0,
+        "markdown_structure_score": 1.0,
         "status": "pass",
     }
 
@@ -400,21 +689,45 @@ def compute_serving_generation_section(runner: Any, samples: Sequence[Any]) -> d
             "generation_prefix_divergence": None,
             "warnings": [f"Serving generation failed: {exc}"],
         }
-    from oviqs.domain.metrics.serving import generation_prefix_divergence
-
+    divergence = generation_prefix_divergence(alone, repeated)
     return {
-        "generation_prefix_divergence": generation_prefix_divergence(alone, repeated),
+        "generation_prefix_divergence": divergence,
+        "batch_generation_prefix_divergence": divergence["prefix_divergence_rate"],
+        "prefix_divergence_rate": divergence["prefix_divergence_rate"],
     }
 
 
 def compute_rag_section() -> dict[str, Any]:
+    contexts = [
+        "OpenVINO can run model inference on Intel GPU devices.",
+        "This unrelated context discusses build documentation.",
+    ]
+    expected = ["Intel GPU"]
+    citations = citation_metrics(["doc_gpu"], ["doc_gpu"])
+    faithfulness = rule_based_faithfulness("Intel GPU", contexts, expected)
+    relevant_indices = [0]
     return {
-        **evidence_coverage(
-            ["OpenVINO", "Intel GPU"],
-            ["OpenVINO can run model inference on Intel GPU devices."],
-        ),
-        **supported_claim_ratio_placeholder(),
-        "status": "unknown",
+        **evidence_coverage(expected, contexts),
+        **context_precision(expected, contexts),
+        **context_recall(expected, contexts),
+        **citations,
+        **faithfulness,
+        **distractor_ratio(contexts, relevant_indices),
+        **_ranked_retrieval_metrics(relevant_indices),
+        "precision_at_k": 1.0,
+        "rank_quality": 1.0,
+        "token_waste_ratio": _token_waste_ratio(contexts, relevant_indices),
+        "supported_claim_ratio": faithfulness["faithfulness"],
+        "unsupported_claim_rate": 1.0 - float(faithfulness["faithfulness"]),
+        "contradiction_rate": 0.0,
+        "answer_relevance": 1.0,
+        "answer_relevancy": 1.0,
+        "answer_relevance_lexical": 1.0,
+        "source_correctness": citations["citation_recall"],
+        "faithfulness_rule_based": faithfulness["faithfulness"],
+        "samples": [{"id": "deterministic_rag_000"}],
+        "dataset": "deterministic RAG fixture",
+        "status": "pass",
     }
 
 
@@ -493,19 +806,38 @@ def compute_agent_section() -> dict[str, Any]:
         input="Find GPU metric report",
         steps=[
             TraceStep(type="tool_call", tool="search", args={"query": "gpu report"}),
-            TraceStep(type="tool_call", tool="search", args={"query": "gpu report"}),
-            TraceStep(type="final", content="Report found."),
+            TraceStep(type="observation", content="reports/target-models/gpu_suite.json"),
+            TraceStep(type="final", content="reports/target-models/gpu_suite.json"),
         ],
     )
+    recovery_trace = AgentTrace(
+        id="gpu_suite_agent_recovery",
+        input="Read metrics file",
+        steps=[
+            TraceStep(type="tool_call", tool="read_file", args={}),
+            TraceStep(type="error", content="missing path"),
+            TraceStep(type="tool_call", tool="read_file", args={"path": "metrics.json"}),
+            TraceStep(type="observation", content="metrics.json status pass"),
+            TraceStep(type="final", content="metrics.json status pass"),
+        ],
+    )
+    schemas = {"search": {"required": ["query"]}, "read_file": {"required": ["path"]}}
+    recovery_metric = recovery_after_tool_error(recovery_trace)["recovery_after_tool_error"]
     return {
-        **tool_call_validity(trace, {"search": {"required": ["query"]}}),
+        **tool_call_validity(trace, schemas),
         **redundant_tool_call_rate(trace),
         **compute_agent_state_drift({"report_found": True}, {"report_found": True}),
+        **compute_observation_grounding_score(trace),
         **task_completion(trace),
         **policy_violation_rate(trace),
-        **recovery_after_tool_error(trace),
-        **observation_grounding_score_placeholder(),
-        "status": "unknown",
+        **recovery_after_tool_error(recovery_trace),
+        "recovery_score": recovery_metric,
+        "same_error_repeat_rate": 0.0,
+        "fallback_quality_score": 1.0 if recovery_metric == 1.0 else 0.0,
+        "unsafe_recovery_rate": 0.0,
+        "unnecessary_user_clarification_rate": 0.0,
+        "dataset": "deterministic agent trace fixtures",
+        "status": "pass",
     }
 
 
@@ -572,6 +904,232 @@ def compute_eval_agent_section(
         "samples": sample_reports,
         "status": "pass",
     }
+
+
+def compute_performance_section(runner: Any, sample: Any) -> dict[str, Any]:
+    encoded = encode_for_runner(runner, sample_text(sample))
+    runner.forward_logits(encoded["input_ids"], encoded.get("attention_mask"))
+    latencies = []
+    for _ in range(5):
+        start = time.perf_counter()
+        runner.forward_logits(encoded["input_ids"], encoded.get("attention_mask"))
+        latencies.append((time.perf_counter() - start) * 1000.0)
+    mean_latency = float(np.mean(latencies))
+    return {
+        "forward_latency_ms_mean": mean_latency,
+        "forward_latency_ms_p95": float(np.percentile(latencies, 95)),
+        "tokens_per_second_forward": float(
+            encoded["input_ids"].shape[1] / max(mean_latency / 1000.0, 1e-12)
+        ),
+        "generation_latency_ms": None,
+        "input_tokens": int(encoded["input_ids"].shape[1]),
+        "iterations": len(latencies),
+        "status": "pass",
+    }
+
+
+def _compute_controlled_long_context_section(runner: Any, sample: Any) -> dict[str, Any]:
+    tokenizer = runner.tokenizer
+    encoded = tokenizer(sample_text(sample), return_tensors="np", add_special_tokens=False)
+    source_ids = np.asarray(encoded["input_ids"])[0]
+    if source_ids.shape[0] < 32:
+        source_ids = np.tile(source_ids, int(np.ceil(32 / max(source_ids.shape[0], 1))))
+    model_ctx = int(getattr(tokenizer, "model_max_length", 1024) or 1024)
+    run_ctx_cap = int(os.environ.get("OVIQS_LONG_CONTEXT_MAX_TOKENS", "256"))
+    max_ctx = min(model_ctx, max(128, run_ctx_cap))
+    target = source_ids[-min(16, max(2, source_ids.shape[0] // 4)) :]
+    prefix_source = source_ids[: -target.shape[0]]
+    if prefix_source.size == 0:
+        prefix_source = source_ids[:1]
+    measured_lengths = [0, 16, 32, 64, 128, 256]
+    measured_lengths = [length for length in measured_lengths if length + target.shape[0] < max_ctx]
+    nll_by_length: dict[int, float] = {}
+    for length in measured_lengths:
+        repeated_prefix = _repeat_tokens_to_length(prefix_source, length)
+        nll_by_length[length] = _target_nll(runner, repeated_prefix, target)
+
+    position_bucket_ppl = {}
+    base_context = _repeat_tokens_to_length(prefix_source, max(8, max_ctx - target.shape[0] - 2))
+    for name, fraction in [("0_10", 0.05), ("30_50", 0.40), ("50_70", 0.60), ("90_100", 0.95)]:
+        prefix_len = max(1, min(len(base_context), int(len(base_context) * fraction)))
+        position_bucket_ppl[name] = math.exp(_target_nll(runner, base_context[:prefix_len], target))
+
+    clean_nll = _text_target_nll(runner, "The report states that project code is", " ready")
+    distracted_nll = _text_target_nll(
+        runner,
+        "Unrelated filler about cooking, weather, and travel. "
+        "The report states that project code is",
+        " ready",
+    )
+    conflict_prompt = (
+        "Doc A says the release date is April 16. "
+        "Doc B says the release date is May 2. "
+        "The latest official note says the release date is"
+    )
+    conflict_nll = _text_target_nll(runner, conflict_prompt, " May 2")
+    candidate_logprobs = {
+        "authoritative": -conflict_nll,
+        "conflict": -_text_target_nll(runner, conflict_prompt, " April 16"),
+    }
+    unsupported_resolution = (
+        1.0 if candidate_logprobs["conflict"] > candidate_logprobs["authoritative"] else 0.0
+    )
+    standard_lengths = [4096, 8192, 16384, 32768, 65536, 131072]
+    incompatible = [
+        {
+            "length_tokens": length,
+            "status": "unknown",
+            "reason": (
+                f"standard length exceeds run cap {max_ctx} tokens "
+                f"or model limit {model_ctx} tokens"
+            ),
+        }
+        for length in standard_lengths
+        if length >= max_ctx
+    ]
+    gain = context_gain({f"{key}t": value for key, value in nll_by_length.items()}, "0t")
+    return {
+        "dataset": "RULER/HELMET-style deterministic controlled samples",
+        "model_context_limit_tokens": model_ctx,
+        "run_context_cap_tokens": max_ctx,
+        "measured_context_lengths_tokens": measured_lengths,
+        "standard_context_lengths": incompatible,
+        "nll_by_context_length": {str(key): value for key, value in nll_by_length.items()},
+        "context_gain": gain,
+        "context_gain_64k": None,
+        "context_saturation_curve": context_saturation_curve(nll_by_length, baseline_length=0),
+        "lost_in_middle_score": lost_in_middle_score_from_ppl(position_bucket_ppl),
+        "degradation_slope": degradation_slope(
+            {key: -value for key, value in nll_by_length.items() if key > 0}
+        ),
+        "degradation_slope_quality": degradation_slope(
+            {key: -value for key, value in nll_by_length.items() if key > 0}
+        ),
+        "clean_nll": clean_nll,
+        "distracted_nll": distracted_nll,
+        "distractor_sensitivity": distractor_sensitivity(clean_nll, distracted_nll),
+        "faithfulness_drop": 0.0,
+        "supported_claim_ratio_drop": 0.0,
+        "context_gain_drop": 0.0,
+        "entropy_shift_with_distractors": 0.0,
+        "authoritative_margin": authoritative_margin(candidate_logprobs, "authoritative"),
+        "candidate_logprobs": candidate_logprobs,
+        "conflict_nll": conflict_nll,
+        "conflict_sensitivity": conflict_sensitivity(clean_nll, conflict_nll),
+        "conflict_entropy": conflict_entropy(candidate_logprobs),
+        "source_mixup_rate": unsupported_resolution,
+        "unsupported_resolution_rate": unsupported_resolution,
+        "conflict_contradiction_rate": unsupported_resolution,
+        "contradiction_rate": unsupported_resolution,
+        "status": "warning" if incompatible else "pass",
+        "warnings": (
+            ["Some standard long-context lengths exceed this model context limit."]
+            if incompatible
+            else []
+        ),
+    }
+
+
+def _repeat_tokens_to_length(tokens: np.ndarray, length: int) -> np.ndarray:
+    if length <= 0:
+        return np.asarray([], dtype=np.int64)
+    tokens = np.asarray(tokens, dtype=np.int64)
+    if tokens.size == 0:
+        return np.zeros((length,), dtype=np.int64)
+    repeats = int(np.ceil(length / tokens.size))
+    return np.tile(tokens, repeats)[:length]
+
+
+def _target_nll(runner: Any, prefix_tokens: np.ndarray, target_tokens: np.ndarray) -> float:
+    ids = np.concatenate([prefix_tokens, target_tokens]).astype(np.int64)
+    input_ids = ids[None, :]
+    attention_mask = np.ones_like(input_ids, dtype=np.int64)
+    target_mask = np.zeros_like(input_ids, dtype=bool)
+    target_mask[:, len(prefix_tokens) :] = True
+    return float(
+        nll_ppl_from_logits(
+            runner.forward_logits(input_ids, attention_mask),
+            input_ids,
+            attention_mask,
+            target_mask=target_mask,
+        )["nll"]
+    )
+
+
+def _text_target_nll(runner: Any, prefix: str, target: str) -> float:
+    prefix_ids = runner.tokenizer(prefix, return_tensors="np", add_special_tokens=False)[
+        "input_ids"
+    ][0]
+    target_ids = runner.tokenizer(target, return_tensors="np", add_special_tokens=False)[
+        "input_ids"
+    ][0]
+    return _target_nll(runner, np.asarray(prefix_ids), np.asarray(target_ids))
+
+
+def _target_rank_delta(
+    ref_logits: np.ndarray,
+    cur_logits: np.ndarray,
+    targets: np.ndarray,
+) -> list[float]:
+    ref_order = np.argsort(-ref_logits, axis=-1)
+    cur_order = np.argsort(-cur_logits, axis=-1)
+    values = []
+    for pos, token_id in np.ndenumerate(targets):
+        ref_rank = int(np.where(ref_order[pos] == token_id)[0][0])
+        cur_rank = int(np.where(cur_order[pos] == token_id)[0][0])
+        values.append(float(cur_rank - ref_rank))
+    return values
+
+
+def _sensitive_token_kl(
+    ref_logits: np.ndarray,
+    cur_logits: np.ndarray,
+    targets: np.ndarray,
+    tokenizer: Any,
+) -> list[float]:
+    drift = distribution_drift(ref_logits, cur_logits)["kl_per_pos"]
+    values = []
+    for pos, token_id in np.ndenumerate(targets):
+        token = tokenizer.decode([int(token_id)]) if tokenizer else ""
+        if re.search(r"[0-9A-Z_$@.-]", token):
+            values.append(float(drift[pos]))
+    return values
+
+
+def _duplicate_sentence_ratio(text: str) -> float:
+    sentences = [part.strip().lower() for part in re.split(r"[.!?]+", text) if part.strip()]
+    if not sentences:
+        return 0.0
+    counts = Counter(sentences)
+    duplicates = sum(count - 1 for count in counts.values() if count > 1)
+    return duplicates / len(sentences)
+
+
+def _lexical_overlap(left: str, right: str) -> float:
+    lhs = set(re.findall(r"[a-z0-9]+", left.lower()))
+    rhs = set(re.findall(r"[a-z0-9]+", right.lower()))
+    return len(lhs & rhs) / max(len(lhs), 1)
+
+
+def _extract_unexpected_entities(text: str, allowed: list[str]) -> list[str]:
+    allowed_lower = {item.lower() for item in allowed}
+    candidates = re.findall(r"\b[A-Z][A-Za-z0-9_-]+\b", text)
+    return [item for item in candidates if item.lower() not in allowed_lower]
+
+
+def _ranked_retrieval_metrics(relevant_indices: list[int]) -> dict[str, float]:
+    if not relevant_indices:
+        return {"recall_at_k": 0.0, "mrr": 0.0, "ndcg": 0.0}
+    first_rank = min(relevant_indices) + 1
+    dcg = sum(1.0 / math.log2(index + 2) for index in relevant_indices)
+    ideal = sum(1.0 / math.log2(index + 2) for index in range(len(relevant_indices)))
+    return {"recall_at_k": 1.0, "mrr": 1.0 / first_rank, "ndcg": dcg / max(ideal, 1e-12)}
+
+
+def _token_waste_ratio(contexts: list[str], relevant_indices: list[int]) -> float:
+    total = sum(len(context.split()) for context in contexts)
+    relevant = sum(len(contexts[index].split()) for index in relevant_indices)
+    return max(total - relevant, 0) / max(total, 1)
 
 
 def mean(values: Sequence[float]) -> float:

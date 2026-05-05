@@ -1,5 +1,9 @@
 # Metric catalogue
 
+For detailed formulas, dataset requirements and triage actions, start with the
+[Metric playbook](playbook.md). This catalogue is the compact path contract for
+reports, CSV output, gates and reference-comparison views.
+
 Metric families:
 
 - inference equivalence: distribution alignment, logit similarity and top-k overlap
@@ -56,6 +60,16 @@ Use exact path names in `metrics.csv`, gate YAML and comparison output.
 | `serving.prefix_divergence` | Serving | Prefix-equivalent requests and aligned outputs/logits. | Lower is better; record serving endpoint and cache settings. |
 | `performance.latency_ms` | Performance | Timed request execution. | Lower is better; gate only within comparable hardware profiles. |
 | `performance.tokens_per_second` | Performance | Token count and elapsed generation time. | Higher is better; gate only within comparable hardware profiles. |
+
+The full metric-name surface is documented by family:
+[likelihood](details/likelihood.md),
+[distribution drift](details/distribution-drift.md),
+[long context](details/long-context.md),
+[generation](details/generation.md),
+[RAG](details/rag.md),
+[agent](details/agent.md),
+[serving](details/serving.md) and
+[performance](details/performance.md).
 
 ## Backend availability
 

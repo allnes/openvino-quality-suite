@@ -339,7 +339,71 @@ def test_reference_comparison_cli_can_include_all_coverage_metrics(tmp_path):
 
     assert result.exit_code == 0, result.output
     content = out.read_text(encoding="utf-8")
-    assert "| Model | likelihood.perplexity | likelihood.num_tokens |" in content
+    assert "likelihood.perplexity" in content
+    assert "likelihood.num_tokens" in content
+    assert "likelihood.token_logprobs" in content
+
+
+def test_reference_comparison_cli_all_metrics_discovers_nested_report_metrics(tmp_path):
+    report = tmp_path / "qwen.json"
+    report.write_text(
+        json.dumps(
+            _report_payload(
+                "qwen",
+                likelihood={"status": "pass", "perplexity": 29.6, "num_tokens": 12},
+                generation={
+                    "status": "pass",
+                    "json_validity": {"json_valid": True},
+                    "ngram_repetition": {"repetition_rate": 0.0, "unique_ngram_ratio": 1.0},
+                },
+                serving={
+                    "status": "pass",
+                    "batch_invariance": {
+                        "mean_kl": 0.0,
+                        "p95_kl": 0.0,
+                        "top10_overlap": 1.0,
+                    },
+                },
+                metric_references={},
+            )
+        ),
+        encoding="utf-8",
+    )
+    out = tmp_path / "comparison_all_nested.html"
+
+    result = CliRunner().invoke(
+        app,
+        [
+            "report",
+            "reference-comparison",
+            "--report",
+            f"Qwen={report}",
+            "--out",
+            str(out),
+            "--format",
+            "html-by-model",
+            "--all-metrics",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    content = out.read_text(encoding="utf-8")
+    assert "token_logprobs" in content
+    assert "blocked" in content
+    assert "not_collected" in content
+    assert "batch_invariance.mean_kl" in content
+    assert "batch_mean_kl" in content
+    assert "generation.json_validity.json_valid" in content
+    assert "json_valid</h3>" in content
+    assert "ngram_repetition.unique_ngram_ratio" in content
+    assert "ngram_repetition_rate" in content
+    assert "serving.batch_invariance.mean_kl" in content
+    assert "Evidence / reason" in content
+    assert "Required inputs" in content
+    assert "metric-grid" in content
+    assert "show not_collected catalog gaps" in content
+    assert "Mean KL drift for the same prompt alone versus inside a batch." in content
+    assert "Boolean result of parsing generated text as JSON." in content
 
 
 def test_reference_comparison_cli_writes_csv(tmp_path):
@@ -417,5 +481,64 @@ def test_reference_comparison_cli_writes_html_dashboard(tmp_path):
     content = out.read_text(encoding="utf-8")
     assert "<!doctype html>" in content
     assert "OVIQS Target Model Quality Dashboard" in content
+    assert 'class="model-button active"' in content
+    assert 'data-model="qwen"' in content
+    assert 'id="critical-comparison"' in content
     assert "likelihood.perplexity" in content
-    assert "Report Paths" in content
+    assert "Report:" in content
+    assert "Evidence / reason" in content
+    assert "deterministic drift oracle" in content
+    assert ">fail</span>" in content
+    assert '<body class="hide-not-collected">' in content
+
+
+def test_reference_comparison_cli_writes_html_by_model_for_multiple_reports(tmp_path):
+    qwen = tmp_path / "qwen.json"
+    mistral = tmp_path / "mistral.json"
+    qwen.write_text(
+        json.dumps(
+            _report_payload(
+                "qwen",
+                likelihood={"status": "pass", "perplexity": 29.6},
+                serving={"status": "warning", "batch_mean_kl": 0.1},
+                metric_references={},
+            )
+        ),
+        encoding="utf-8",
+    )
+    mistral.write_text(
+        json.dumps(
+            _report_payload(
+                "mistral",
+                likelihood={"status": "pass", "perplexity": 7.8},
+                serving={"status": "pass", "batch_mean_kl": 0.0},
+                metric_references={},
+            )
+        ),
+        encoding="utf-8",
+    )
+    out = tmp_path / "comparison_by_model.html"
+
+    result = CliRunner().invoke(
+        app,
+        [
+            "report",
+            "reference-comparison",
+            "--report",
+            f"Qwen={qwen}",
+            "--report",
+            f"Mistral={mistral}",
+            "--out",
+            str(out),
+            "--format",
+            "html-by-model",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    content = out.read_text(encoding="utf-8")
+    assert 'data-model="qwen"' in content
+    assert 'data-model="mistral"' in content
+    assert 'id="model-panel-qwen"' in content
+    assert 'id="model-panel-mistral"' in content
+    assert "Critical Metrics Comparison" in content

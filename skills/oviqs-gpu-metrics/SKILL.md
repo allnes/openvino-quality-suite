@@ -13,6 +13,7 @@ Read only what is needed:
 
 - `docs/tutorials/run-the-gpu-suite.md` for the public GPU workflow.
 - `docs/reference/cli/run-gpu-suite.md` for current CLI flags.
+- `docs/reference/metrics/playbook.md` for formulas, dataset requirements and triage actions.
 - `docs/reference/metrics/catalogue.md` for GPU-relevant metric paths and unknown semantics.
 - `docs/how-to/integrate-in-ci.md` for report validation, bundling and CI artifact handling.
 - `configs/examples/genai_metric_models.yaml` for machine-readable model choices.

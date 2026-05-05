@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from typing import Any
 
 import numpy as np
@@ -21,7 +22,9 @@ from oviqs.application.services.evaluation import (
     compute_generation_section,
     compute_likelihood_section,
     compute_long_context_section,
+    compute_performance_section,
     compute_rag_section,
+    compute_reference_drift_section,
     compute_self_drift_section,
     compute_serving_generation_section,
     compute_serving_section,
@@ -215,10 +218,24 @@ def build_gpu_suite_report(
     if not samples:
         raise ValueError("GPU suite dataset must contain at least one sample")
 
-    likelihood = safe_section("likelihood", lambda: compute_likelihood_section(runner, samples))
+    reference_runner = None
+    if os.environ.get("OVIQS_ENABLE_CPU_REFERENCE") in {"1", "true", "True", "yes"}:
+        try:
+            reference_runner = runner_factory(request.backend, request.model, "CPU")
+        except Exception:
+            reference_runner = None
+
+    likelihood = safe_section(
+        "likelihood",
+        lambda: compute_likelihood_section(runner, samples, reference_runner),
+    )
     inference_equivalence = safe_section(
         "inference_equivalence",
-        lambda: compute_self_drift_section(runner, samples),
+        lambda: (
+            compute_reference_drift_section(reference_runner, runner, samples)
+            if reference_runner is not None
+            else compute_self_drift_section(runner, samples)
+        ),
     )
     long_context = safe_section(
         "long_context",
@@ -237,6 +254,9 @@ def build_gpu_suite_report(
     )
     rag = safe_section("rag", compute_rag_section)
     agent = safe_section("agent", compute_agent_section)
+    performance = safe_section(
+        "performance", lambda: compute_performance_section(runner, samples[0])
+    )
     section_statuses = [
         section.get("status", "unknown")
         for section in [
@@ -247,6 +267,7 @@ def build_gpu_suite_report(
             generation,
             rag,
             agent,
+            performance,
         ]
     ]
 
@@ -269,6 +290,7 @@ def build_gpu_suite_report(
         rag=rag,
         agent=agent,
         serving=serving,
+        performance=performance,
     )
 
 
