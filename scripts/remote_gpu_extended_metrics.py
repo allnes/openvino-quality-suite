@@ -11,6 +11,7 @@ import numpy as np
 from datasets import load_dataset
 from scipy.special import softmax
 
+from oviqs.adapters.runners.hf import HFReferenceRunner
 from oviqs.adapters.runners.ov_genai import OVGenAIRunner
 from oviqs.adapters.runners.ov_runtime import OVRuntimeLogitsRunner
 from oviqs.domain.metrics.agent import (
@@ -45,6 +46,12 @@ def main() -> None:
     parser.add_argument("--model", required=True)
     parser.add_argument("--int8-model")
     parser.add_argument("--genai-model")
+    parser.add_argument(
+        "--reference-model",
+        help="PyTorch/HF reference checkpoint for OpenVINO-vs-PyTorch drift "
+        "(base HF id of the exported model). Falls back to --model if omitted.",
+    )
+    parser.add_argument("--reference-device", default="cpu")
     parser.add_argument("--out", required=True)
     parser.add_argument("--dataset-cache", default="data/wikitext2")
     parser.add_argument("--device", default="GPU")
@@ -56,20 +63,26 @@ def main() -> None:
     texts = load_wikitext2(dataset_path)
 
     gpu = OVRuntimeLogitsRunner(args.model, device=args.device)
-    cpu = OVRuntimeLogitsRunner(args.model, device="CPU")
+    # Reference is PyTorch/HF (source framework), not OpenVINO-on-CPU: drift
+    # measures export + quantization fidelity of the OpenVINO model against
+    # PyTorch. Defaults to the base checkpoint of the exported model.
+    reference_model = args.reference_model or args.model
+    pytorch_reference = HFReferenceRunner(reference_model, device=args.reference_device)
 
     report: dict[str, Any] = {
         "run": {
             "id": out.stem,
             "model": args.model,
             "device": args.device,
+            "reference_model": reference_model,
+            "reference_backend": "hf",
             "dataset": "wikitext/wikitext-2-raw-v1 validation",
         },
         "dataset": {"path": str(dataset_path), "num_texts": len(texts)},
     }
 
     report["likelihood_wikitext2"] = likelihood_section(gpu, texts[:8])
-    report["cpu_gpu_drift"] = drift_section(cpu, gpu, texts[:3])
+    report["pytorch_openvino_drift"] = drift_section(pytorch_reference, gpu, texts[:3])
     if args.int8_model:
         int8 = OVRuntimeLogitsRunner(args.int8_model, device=args.device)
         report["precision_drift_fp16_vs_int8"] = drift_section(gpu, int8, texts[:3])

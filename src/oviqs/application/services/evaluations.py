@@ -218,10 +218,18 @@ def build_gpu_suite_report(
     if not samples:
         raise ValueError("GPU suite dataset must contain at least one sample")
 
+    # Inference equivalence is measured as OpenVINO (current) vs PyTorch/HF
+    # (reference): it quantifies export + quantization fidelity against the
+    # source framework, not a device difference. The reference model defaults to
+    # OVIQS_REFERENCE_MODEL or request.reference_model (the base HF checkpoint);
+    # without one, drift falls back to a same-runtime self-check.
     reference_runner = None
-    if os.environ.get("OVIQS_ENABLE_CPU_REFERENCE") in {"1", "true", "True", "yes"}:
+    reference_model = request.reference_model or os.environ.get("OVIQS_REFERENCE_MODEL")
+    if reference_model:
         try:
-            reference_runner = runner_factory(request.backend, request.model, "CPU")
+            reference_runner = runner_factory(
+                request.reference_backend, reference_model, request.reference_device
+            )
         except Exception:
             reference_runner = None
 

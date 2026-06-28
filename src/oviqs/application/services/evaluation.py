@@ -491,8 +491,8 @@ def compute_reference_drift_section(
         "target_rank_delta": float(np.mean(rank_deltas)) if rank_deltas else 0.0,
         "sensitive_token_drift": float(np.mean(sensitive_drifts)) if sensitive_drifts else 0.0,
         "samples": sample_metrics,
-        "reference": "same-model CPU logits",
-        "current": "target-device logits",
+        "reference": "same-model PyTorch/HF logits",
+        "current": "OpenVINO target-device logits",
         "status": "pass",
     }
 
