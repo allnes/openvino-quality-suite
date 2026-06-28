@@ -435,9 +435,15 @@ def _value_metric_status(metric: str, value: Any) -> str:
         return ""
     numeric = float(value)
     if _is_zero_drift_metric(metric_name):
-        return "pass" if abs(numeric) <= 1e-5 else "fail"
+        # A continuous drift metric matches its deterministic ideal (≈0) -> pass.
+        # A non-zero value is NOT a failure without a configured gate: the catalog
+        # degradation rule is "degraded when drift exceeds the configured gate", and
+        # cross-framework/quantization drift (PyTorch vs OpenVINO INT4) is expected
+        # to be non-zero. Report it as measured, not fail.
+        return "pass" if abs(numeric) <= 1e-5 else "measured"
     if _is_one_quality_metric(metric_name):
-        return "pass" if numeric >= 0.999 else "fail"
+        # Same reasoning for overlap/cosine metrics whose ideal is 1.0.
+        return "pass" if numeric >= 0.999 else "measured"
     if metric_name in {"redundant_tool_call_rate", "duplicate_sentence_ratio"}:
         return "pass" if abs(numeric) <= 1e-12 else "warning"
     if metric_name in {"state_drift_score", "policy_violation_rate"}:
@@ -458,10 +464,14 @@ def _value_metric_reason(metric: str, value: Any) -> str:
         return ""
     metric_name = metric.lower()
     if _is_zero_drift_metric(metric_name):
-        return "deterministic drift oracle: expected value is near 0 without configured gate"
+        return (
+            "deterministic drift oracle: ideal is ~0; non-zero is measured (not failed) "
+            "without a configured gate — cross-framework/quantization drift is expected"
+        )
     if _is_one_quality_metric(metric_name):
         return (
-            "deterministic overlap/cosine oracle: expected value is near 1 without configured gate"
+            "deterministic overlap/cosine oracle: ideal is ~1; below ideal is measured "
+            "(not failed) without a configured gate"
         )
     if metric_name in {"redundant_tool_call_rate", "duplicate_sentence_ratio"}:
         return (
