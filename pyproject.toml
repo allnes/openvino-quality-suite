@@ -77,6 +77,7 @@ html-dashboard = "oviqs.adapters.reporting:HtmlDashboardRenderer"
 metrics-csv = "oviqs.adapters.reporting:CsvMetricsWriter"
 sample-jsonl = "oviqs.adapters.reporting:JsonlSampleMetricsStore"
 reference-comparison = "oviqs.adapters.reporting:ReferenceComparisonAdapter"
+suite-index = "oviqs.adapters.reporting:SuiteIndexRenderer"
 
 [project.entry-points."oviqs.analysis_rules"]
 built-in = "oviqs.adapters.analysis:BuiltInAnalysisRules"

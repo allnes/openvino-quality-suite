@@ -12,6 +12,7 @@ Generated from `oviq --help` and command-level help output.
 - [`oviq run-gpu-suite`](run-gpu-suite.md)
 - [`oviq compare`](compare.md)
 - [`oviq report build`](report-build.md)
+- [`oviq report build-suite`](report-build-suite.md)
 - [`oviq report analyze`](report-analyze.md)
 - [`oviq report render`](report-render.md)
 - [`oviq report metrics-table`](report-metrics-table.md)

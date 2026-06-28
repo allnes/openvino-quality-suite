@@ -36,6 +36,31 @@ def build_report_bundle(
     typer.echo(f"Wrote {bundle.root}")
 
 
+@report_app.command("build-suite")
+def build_suite_bundle(
+    report: Annotated[
+        list[str],
+        typer.Option(
+            "--report",
+            help="Report JSON path, optionally LABEL=PATH. Repeat for each model.",
+        ),
+    ],
+    out: Annotated[Path, typer.Option(help="Output suite bundle directory")],
+    gates: Annotated[Path | None, typer.Option(help="Optional gates result JSON")] = None,
+    title: Annotated[
+        str, typer.Option(help="Suite index page title")
+    ] = "OVIQS — OpenVINO Inference Quality Suite",
+) -> None:
+    if not report:
+        raise typer.BadParameter("At least one --report is required")
+    workflow = build_default_container().report_workflow_service()
+    try:
+        suite = workflow.build_suite_bundle(report, out, gates_path=gates, title=title)
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    typer.echo(f"Wrote {suite.root}")
+
+
 @report_app.command("analyze")
 def analyze_report(
     report: Annotated[Path, typer.Option(help="Input EvaluationReport JSON")],
