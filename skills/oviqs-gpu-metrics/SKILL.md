@@ -1,6 +1,6 @@
 ---
 name: oviqs-gpu-metrics
-description: Use when preparing or running OVIQS GPU metric verification, standard metric matrix runs, OpenVINO Runtime GPU scorecards, OpenVINO GenAI export plans, validated GPT-2/Gemma/Qwen target checks, clean remote GPU workflows, or extended GPU metric scripts.
+description: Use when preparing or running OVIQS GPU metric verification, standard metric matrix runs, OpenVINO Runtime GPU scorecards, OpenVINO GenAI export plans, canonical OpenVINO/llm target model checks (Qwen3-0.6B, gemma-2-9b-it, Mistral-7B-Instruct-v0.1, gpt-oss-20b, phi-4), clean remote GPU workflows, or extended GPU metric scripts.
 ---
 
 # OVIQS GPU Metrics
@@ -16,10 +16,10 @@ Read only what is needed:
 - `docs/reference/metrics/playbook.md` for formulas, dataset requirements and triage actions.
 - `docs/reference/metrics/catalogue.md` for GPU-relevant metric paths and unknown semantics.
 - `docs/how-to/integrate-in-ci.md` for report validation, bundling and CI artifact handling.
-- `configs/examples/genai_metric_models.yaml` for machine-readable model choices.
+- `configs/examples/genai_metric_models.yaml` for the canonical five OpenVINO/llm models.
 - `configs/suites/gpu_metric_smoke.yaml` for the GPU scorecard scope.
-- `scripts/remote_gpu_validated_gpt2.sh` for a validated GPT-2 base GPU run.
-- `scripts/remote_gpu_extended_gpt2_metrics.py` for WikiText-2, drift, performance,
+- `scripts/remote_gpu_target_models.py` for the canonical target-model GPU runs.
+- `scripts/remote_gpu_extended_metrics.py` for WikiText-2, drift, performance,
   RAG and agent extended metrics.
 - `scripts/remote_gpu_standard_metric_matrix.py` for broad reference-backed metric
   coverage across likelihood, drift, long-context, generation, serving, RAG and agent.
@@ -27,13 +27,20 @@ Read only what is needed:
 ## Workflow
 
 1. Use `.venv/bin/...` locally and the target GPU-machine venv in remote scripts.
-2. Keep evaluation and generation artifacts separate:
-   - `text-generation` export for OpenVINO Runtime logits metrics.
-   - `text-generation-with-past` export for OpenVINO GenAI generation checks.
-3. Generate export commands with `oviq genai-export-plan` before converting models.
-4. Run `oviq run-gpu-suite` against an exported logits model directory.
-5. Pass `--genai-model` only when a compatible GenAI export exists.
-6. Use `openai-community/gpt2` for the currently validated non-toy GPU sanity run.
+2. Pick a model-preparation mode (the remote scripts take `MODE=openvino|convert`):
+   - `MODE=openvino` (default): download the ready-made OpenVINO INT4 artifact from the
+     OpenVINO/llm collection (`huggingface-cli download OpenVINO/<model>-int4-ov`). These
+     artifacts expose full causal-LM logits for OpenVINO Runtime and a with-past variant for
+     OpenVINO GenAI, so no export step is required.
+   - `MODE=convert`: direct conversion of the base checkpoint with `optimum-cli export
+     openvino` (`text-generation` for the logits model, `text-generation-with-past` for the
+     GenAI generation model).
+3. Use `oviq genai-export-plan` to generate the convert-mode export commands for a base
+   checkpoint when you are not downloading the published artifact.
+4. Run `oviq run-gpu-suite` against the prepared model directory.
+5. Pass `--genai-model` (same directory in openvino mode, the with-past export in convert mode)
+   for the generation layer.
+6. Use `Qwen/Qwen3-0.6B` (OpenVINO/Qwen3-0.6B-int4-ov) for the smallest GPU sanity run.
 7. Use a documented target GPU device ID when validating larger target model behavior.
 8. Use the standard metric matrix script when validating reference coverage across metric
    families.
@@ -58,11 +65,10 @@ Read only what is needed:
 ## Commands
 
 ```bash
-.venv/bin/oviq list-genai-models --config configs/examples/genai_metric_models.yaml --tier smoke
-.venv/bin/oviq list-genai-models --config configs/examples/genai_metric_models.yaml --tier validated_gpu
-.venv/bin/oviq genai-export-plan --model openai-community/gpt2 --variant eval_logits --variant genai_generation
-.venv/bin/oviq run-gpu-suite --model models/sshleifer--tiny-gpt2-eval_logits --backend openvino-runtime --dataset /tmp/likelihood.jsonl --device GPU --out reports/gpu_metric_suite.json
-PYTHONPATH=src .venv/bin/python scripts/remote_gpu_standard_metric_matrix.py --model models/openai-community--gpt2-eval-fp16 --genai-model models/openai-community--gpt2-genai-fp16 --dataset-cache data/standard-matrix --out reports/standard_metric_matrix.json
+.venv/bin/oviq list-genai-models --config configs/examples/genai_metric_models.yaml --tier target_gpu
+huggingface-cli download OpenVINO/Qwen3-0.6B-int4-ov --local-dir models/qwen3-0_6b-int4-ov
+.venv/bin/oviq run-gpu-suite --model models/qwen3-0_6b-int4-ov --genai-model models/qwen3-0_6b-int4-ov --backend openvino-runtime --dataset /tmp/likelihood.jsonl --device GPU --window-size 64 --stride 32 --out reports/gpu_metric_suite.json
+PYTHONPATH=src .venv/bin/python scripts/remote_gpu_standard_metric_matrix.py --model models/qwen3-0_6b-int4-ov --genai-model models/qwen3-0_6b-int4-ov --dataset-cache data/standard-matrix --out reports/standard_metric_matrix.json
 .venv/bin/oviq report build --report reports/standard_metric_matrix.json --out reports/standard_metric_matrix-bundle --format all
-.venv/bin/oviq report reference-comparison --report gpt2=reports/standard_metric_matrix.json --format html-dashboard --out reports/standard_metric_matrix.html
+.venv/bin/oviq report reference-comparison --report qwen3=reports/standard_metric_matrix.json --format html-dashboard --out reports/standard_metric_matrix.html
 ```

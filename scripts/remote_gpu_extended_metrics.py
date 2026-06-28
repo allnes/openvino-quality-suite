@@ -372,11 +372,11 @@ def agent_section() -> dict[str, Any]:
             TraceStep(type="tool_call", tool="search", args={"query": "gpu report"}),
             TraceStep(
                 type="observation",
-                content="Found GPU report at reports/target-models/gpt2_gpu_suite.json.",
+                content="Found GPU report at reports/target-models/qwen3_0_6b_gpu_suite.json.",
             ),
             TraceStep(
                 type="final",
-                content="GPU report found at reports/target-models/gpt2_gpu_suite.json.",
+                content="GPU report found at reports/target-models/qwen3_0_6b_gpu_suite.json.",
             ),
         ],
     )

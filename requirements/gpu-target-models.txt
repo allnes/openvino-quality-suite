@@ -1,6 +1,7 @@
-# Extra dependencies for newest requested model families. Install `gpu.txt` first.
-# Then install this file and `gpu-transformers-main.txt` with `pip install --no-deps`
-# because current optimum-intel releases still pin Transformers below Qwen3.5.
+# Extra dependencies for the canonical OpenVINO/llm target families (gpt-oss-20b,
+# phi-4, Mistral, gemma-2, Qwen3). Install `gpu.txt` first. Then install this file
+# and `gpu-transformers-main.txt` with `pip install --no-deps` because current
+# optimum-intel releases still pin Transformers below the versions these models need.
 huggingface-hub>=1.5,<2
 mistral-common>=1.8.6
 Pillow>=10.0

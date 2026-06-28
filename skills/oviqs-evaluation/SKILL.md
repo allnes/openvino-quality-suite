@@ -54,8 +54,8 @@ Use this skill for hands-on evaluation runs in this repository.
 .venv/bin/oviq eval-serving --model dummy --backend dummy --out /tmp/serving.json
 .venv/bin/oviq eval-rag --dataset /tmp/rag.jsonl --answers /tmp/rag_answers.jsonl --out /tmp/rag_report.json
 .venv/bin/oviq eval-agent --traces /tmp/agent_traces.jsonl --expected /tmp/agent_expected.jsonl --out /tmp/agent_report.json
-.venv/bin/oviq run-gpu-suite --model models/sshleifer--tiny-gpt2-eval_logits --backend openvino-runtime --dataset /tmp/likelihood.jsonl --device GPU --out /tmp/gpu_suite.json
-.venv/bin/oviq list-genai-models --tier smoke --metric likelihood
+.venv/bin/oviq run-gpu-suite --model models/qwen3-0_6b-int4-ov --genai-model models/qwen3-0_6b-int4-ov --backend openvino-runtime --dataset /tmp/likelihood.jsonl --device GPU --out /tmp/gpu_suite.json
+.venv/bin/oviq list-genai-models --tier target_gpu --metric likelihood
 .venv/bin/oviq list-metric-references --family rag --json
 .venv/bin/oviq report validate --report /tmp/likelihood.json
 .venv/bin/oviq report analyze --report /tmp/likelihood.json --baseline /tmp/baseline.json --gates configs/gates/default_gates.yaml --out /tmp/analysis.json
