@@ -836,8 +836,8 @@ def agent_section() -> dict[str, Any]:
         input="Find the report and answer with the path.",
         steps=[
             TraceStep(type="tool_call", tool="search", args={"query": "gpu report"}),
-            TraceStep(type="observation", content="reports/target-models/gpt2_gpu.json"),
-            TraceStep(type="final", content="reports/target-models/gpt2_gpu.json"),
+            TraceStep(type="observation", content="reports/target-models/qwen3_0_6b_gpu.json"),
+            TraceStep(type="final", content="reports/target-models/qwen3_0_6b_gpu.json"),
         ],
     )
     recovery = AgentTrace(

@@ -31,55 +31,39 @@ architecture:
       - agent_state_drift
       - observation_grounding_placeholder
 
+# Canonical five OpenVINO/llm artifacts. `output_dir` is the local directory the
+# pre-converted INT4 OpenVINO IR is downloaded into; the same directory serves
+# both the OpenVINO Runtime logits backend and the OpenVINO GenAI generation
+# layer (these artifacts ship the full causal-LM IR plus a with-past variant).
 models:
-  validated_gpt2_logits:
-    hf_id: openai-community/gpt2
-    export_task: text-generation
-    weight_format: fp16
-    output_dir: models/openai-community--gpt2-eval-fp16
-  validated_gpt2_genai:
-    hf_id: openai-community/gpt2
-    export_task: text-generation-with-past
-    weight_format: fp16
-    output_dir: models/openai-community--gpt2-genai-fp16
-  qwen3_logits:
+  qwen3_0_6b:
     hf_id: Qwen/Qwen3-0.6B
-    export_task: text-generation
+    openvino_artifact: OpenVINO/Qwen3-0.6B-int4-ov
     weight_format: int4
-    output_dir: models/qwen3_0_6b-eval-int4
-  qwen3_genai:
-    hf_id: Qwen/Qwen3-0.6B
-    export_task: text-generation-with-past
+    output_dir: models/qwen3-0_6b-int4-ov
+  gemma2_9b_it:
+    hf_id: google/gemma-2-9b-it
+    openvino_artifact: OpenVINO/gemma-2-9b-it-int4-ov
     weight_format: int4
-    output_dir: models/qwen3_0_6b-genai-int4
-  gpt_oss_logits:
+    output_dir: models/gemma-2-9b-it-int4-ov
+  mistral7b_instruct:
+    hf_id: mistralai/Mistral-7B-Instruct-v0.1
+    openvino_artifact: OpenVINO/mistral-7b-instruct-v0.1-int4-ov
+    weight_format: int4
+    output_dir: models/mistral-7b-instruct-v0.1-int4-ov
+  gpt_oss_20b:
     hf_id: openai/gpt-oss-20b
-    export_task: text-generation
+    openvino_artifact: OpenVINO/gpt-oss-20b-int4-ov
     weight_format: int4
-    output_dir: models/openai--gpt-oss-20b-eval-int4
-  mistral7b_logits:
-    hf_id: mistralai/Mistral-7B-Instruct-v0.3
-    export_task: text-generation
+    output_dir: models/gpt-oss-20b-int4-ov
+  phi_4:
+    hf_id: microsoft/phi-4
+    openvino_artifact: OpenVINO/phi-4-int4-ov
     weight_format: int4
-    output_dir: models/OpenVINO--Mistral-7B-Instruct-v0.3-int4-ov
-  gemma3_logits:
-    hf_id: google/gemma-3-270m-it
-    export_task: text-generation
-    weight_format: int4
-    output_dir: models/gemma3_270m_it-eval-int4
-  smoke_logits:
-    hf_id: sshleifer/tiny-gpt2
-    export_task: text-generation
-    weight_format: fp16
-    output_dir: models/sshleifer--tiny-gpt2-eval_logits
-  qwen_logits:
-    hf_id: Qwen/Qwen2.5-0.5B-Instruct
-    export_task: text-generation
-    weight_format: fp16
-    output_dir: models/qwen--qwen2-5-0-5b-instruct-eval_logits
+    output_dir: models/phi-4-int4-ov
 
 datasets:
   likelihood: data/smoke_likelihood.jsonl
 
 outputs:
-  report: reports/target-models/gpt2_gpu_suite.json
+  report: reports/target-models/gpu_suite.json

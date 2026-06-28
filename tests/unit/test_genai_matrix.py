@@ -14,14 +14,15 @@ MATRIX_PATH = REPO_ROOT / "configs/examples/genai_metric_models.yaml"
 def test_load_and_filter_genai_matrix():
     matrix = load_genai_model_matrix(MATRIX_PATH)
 
-    assert matrix.default_model("smoke").id == "Qwen/Qwen2.5-0.5B-Instruct"
-    likelihood_models = matrix.list_models(tier="smoke", metric="likelihood")
+    assert matrix.default_model("target_gpu").id == "Qwen/Qwen3-0.6B"
+    likelihood_models = matrix.list_models(tier="target_gpu", metric="likelihood")
 
     assert [model.id for _tier, model in likelihood_models] == [
-        "sshleifer/tiny-gpt2",
-        "Qwen/Qwen2.5-0.5B-Instruct",
-        "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
-        "microsoft/Phi-3-mini-4k-instruct",
+        "Qwen/Qwen3-0.6B",
+        "google/gemma-2-9b-it",
+        "mistralai/Mistral-7B-Instruct-v0.1",
+        "openai/gpt-oss-20b",
+        "microsoft/phi-4",
     ]
 
 
@@ -29,7 +30,7 @@ def test_export_plan_builds_optimum_commands():
     matrix = load_genai_model_matrix(MATRIX_PATH)
     commands = export_plan(
         matrix,
-        model_id="Qwen/Qwen2.5-0.5B-Instruct",
+        model_id="Qwen/Qwen3-0.6B",
         output_root="models",
         variants=["eval_logits"],
     )
@@ -37,7 +38,7 @@ def test_export_plan_builds_optimum_commands():
     assert len(commands) == 1
     assert commands[0].command[:3] == ["optimum-cli", "export", "openvino"]
     assert commands[0].task == "text-generation"
-    assert commands[0].output_dir == "models/qwen--qwen2-5-0-5b-instruct-eval_logits"
+    assert commands[0].output_dir == "models/qwen--qwen3-0-6b-eval_logits"
 
 
 def test_sanitize_model_name():
@@ -52,7 +53,7 @@ def test_list_genai_models_cli_json():
             "--config",
             str(MATRIX_PATH),
             "--tier",
-            "smoke",
+            "target_gpu",
             "--metric",
             "generation",
             "--json",
@@ -62,8 +63,11 @@ def test_list_genai_models_cli_json():
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)
     assert [item["id"] for item in payload] == [
-        "Qwen/Qwen2.5-0.5B-Instruct",
-        "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+        "Qwen/Qwen3-0.6B",
+        "google/gemma-2-9b-it",
+        "mistralai/Mistral-7B-Instruct-v0.1",
+        "openai/gpt-oss-20b",
+        "microsoft/phi-4",
     ]
 
 
@@ -73,7 +77,7 @@ def test_genai_export_plan_cli_json():
         [
             "genai-export-plan",
             "--model",
-            "Qwen/Qwen2.5-0.5B-Instruct",
+            "Qwen/Qwen3-0.6B",
             "--config",
             str(MATRIX_PATH),
             "--variant",

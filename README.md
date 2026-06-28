@@ -100,13 +100,16 @@ and gates treat unreferenced metrics as `unknown`.
 
 ## GenAI model matrix
 
-Recommended GenAI models for metric testing are tracked in
-`configs/examples/genai_metric_models.yaml` and exposed through the generated CLI
-reference.
+The five canonical GenAI networks for metric testing are tracked in
+`configs/examples/genai_metric_models.yaml` (tier `target_gpu`) and exposed
+through the generated CLI reference. Each ships as a ready-made OpenVINO INT4
+artifact in the [OpenVINO/llm](https://huggingface.co/collections/OpenVINO/llm)
+collection: Qwen3-0.6B, gemma-2-9b-it, Mistral-7B-Instruct-v0.1, gpt-oss-20b and
+phi-4.
 
 ```bash
-.venv/bin/oviq list-genai-models --tier smoke --metric likelihood
-.venv/bin/oviq genai-export-plan --model Qwen/Qwen2.5-0.5B-Instruct
+.venv/bin/oviq list-genai-models --tier target_gpu --metric likelihood
+.venv/bin/oviq genai-export-plan --model Qwen/Qwen3-0.6B
 ```
 
 ## Documentation map

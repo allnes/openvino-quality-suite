@@ -24,7 +24,7 @@ Generated from the Typer command help.
 ## Example
 
 ```bash
-oviq genai-export-plan --model TinyLlama/TinyLlama-1.1B-Chat-v1.0
+oviq genai-export-plan --model Qwen/Qwen3-0.6B
 ```
 
 The export plan is documentation for the operator. It does not replace an actual OpenVINO model export or a subsequent `oviq run-gpu-suite` validation run.
