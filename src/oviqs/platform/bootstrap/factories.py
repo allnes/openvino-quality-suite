@@ -8,6 +8,7 @@ from oviqs.ports.reporting import (
     ReferenceComparisonRendererPort,
     ReportIOPort,
     ReportRendererPort,
+    SuiteIndexRendererPort,
 )
 
 
@@ -33,6 +34,10 @@ def build_sample_metrics_store() -> SampleMetricsStorePort:
 
 def build_reference_comparison_renderer() -> ReferenceComparisonRendererPort:
     return _plugin_instance("oviqs.reporters", "reference-comparison")
+
+
+def build_suite_index_renderer() -> SuiteIndexRendererPort:
+    return _plugin_instance("oviqs.reporters", "suite-index")
 
 
 def build_analysis_rules() -> tuple[AnalysisRulePort, ...]:
@@ -64,4 +69,5 @@ __all__ = [
     "build_reference_comparison_renderer",
     "build_report_io",
     "build_sample_metrics_store",
+    "build_suite_index_renderer",
 ]

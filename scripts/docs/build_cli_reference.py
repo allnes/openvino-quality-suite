@@ -20,6 +20,7 @@ COMMANDS = [
     ("run-gpu-suite", ["run-gpu-suite"]),
     ("compare", ["compare"]),
     ("report-build", ["report", "build"]),
+    ("report-build-suite", ["report", "build-suite"]),
     ("report-analyze", ["report", "analyze"]),
     ("report-render", ["report", "render"]),
     ("report-metrics-table", ["report", "metrics-table"]),
@@ -183,6 +184,22 @@ CURATED_SECTIONS = {
         "",
         "The bundle is the publishable reporting artifact. It should contain the source "
         "report, normalized metrics, analysis output, metadata, and requested renderings.",
+    ],
+    "report-build-suite": [
+        "## Example",
+        "",
+        "```bash",
+        "oviq report build-suite \\",
+        "  --report Qwen3=reports/qwen3.json \\",
+        "  --report Mistral=reports/mistral.json \\",
+        "  --report Phi-4=reports/phi4.json \\",
+        "  --out reports/suite",
+        "```",
+        "",
+        "Builds a multi-model suite bundle: a per-model dashboard bundle under "
+        "`models/<label>/`, a cross-model `comparison.html`, and an `index.html` landing "
+        "page with a fidelity-first summary table linking them. Use it to publish one "
+        "navigable report across several exported models.",
     ],
     "report-analyze": [
         "## Example",

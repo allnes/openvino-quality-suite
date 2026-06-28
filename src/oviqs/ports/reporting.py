@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Protocol
 
-from oviqs.domain.reporting import ReportAnalysis, ReportBundle, ReportViewModel
+from oviqs.domain.reporting import ReportAnalysis, ReportBundle, ReportViewModel, SuiteModelSummary
 from oviqs.domain.reports import EvaluationReport
 
 
@@ -43,4 +43,16 @@ class ReferenceComparisonRendererPort(Protocol):
         self,
         comparison: dict[str, Any],
         format_name: str,
+    ) -> str: ...
+
+
+class SuiteIndexRendererPort(Protocol):
+    format_name: str
+
+    def render(
+        self,
+        summaries: list[SuiteModelSummary],
+        *,
+        comparison_href: str | None = ...,
+        title: str = ...,
     ) -> str: ...

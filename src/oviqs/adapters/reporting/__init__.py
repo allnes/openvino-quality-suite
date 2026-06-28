@@ -8,6 +8,7 @@ from oviqs.adapters.reporting.markdown_renderer import MarkdownReportRenderer
 from oviqs.adapters.reporting.reference_comparison import ReferenceComparisonAdapter
 from oviqs.adapters.reporting.report_packager import ReportPackager
 from oviqs.adapters.reporting.sample_metrics_jsonl import JsonlSampleMetricsStore
+from oviqs.adapters.reporting.suite_index_renderer import SuiteIndexRenderer
 
 __all__ = [
     "CanonicalReportWriter",
@@ -18,4 +19,5 @@ __all__ = [
     "MarkdownReportRenderer",
     "ReferenceComparisonAdapter",
     "ReportPackager",
+    "SuiteIndexRenderer",
 ]

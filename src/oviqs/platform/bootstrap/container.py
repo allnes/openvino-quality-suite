@@ -27,6 +27,7 @@ from oviqs.platform.bootstrap.factories import (
     build_reference_comparison_renderer,
     build_report_io,
     build_sample_metrics_store,
+    build_suite_index_renderer,
 )
 from oviqs.ports.analysis import (
     AnalysisRulePort,
@@ -42,6 +43,7 @@ from oviqs.ports.reporting import (
     ReportBundleWriterPort,
     ReportIOPort,
     ReportRendererPort,
+    SuiteIndexRendererPort,
 )
 from oviqs.ports.runners import GenerationRunnerFactoryPort, LogitsRunnerFactoryPort
 
@@ -63,6 +65,9 @@ class BootstrapContainer:
     gate_evaluator: GateEvaluatorPort = field(default_factory=build_gate_evaluator)
     reference_comparison_renderer: ReferenceComparisonRendererPort = field(
         default_factory=build_reference_comparison_renderer
+    )
+    suite_index_renderer: SuiteIndexRendererPort = field(
+        default_factory=build_suite_index_renderer
     )
     storage: ArtifactStorePort = field(default_factory=LocalArtifactStorage)
     plugins: InMemoryPluginRegistry = field(default_factory=InMemoryPluginRegistry)
@@ -112,6 +117,7 @@ class BootstrapContainer:
             markdown_renderer=self.markdown_renderer,
             html_renderer=self.html_renderer,
             reference_comparison_renderer=self.reference_comparison_renderer,
+            suite_index_renderer=self.suite_index_renderer,
             metrics_writer=self.csv_metrics_writer,
         )
 

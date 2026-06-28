@@ -11,6 +11,11 @@ from oviqs.domain.reporting.severity import (
     status_to_severity,
     worst_status,
 )
+from oviqs.domain.reporting.suite import (
+    SuiteBundle,
+    SuiteModelSummary,
+    build_suite_model_summary,
+)
 
 __all__ = [
     "AnalysisFinding",
@@ -22,6 +27,9 @@ __all__ = [
     "ReportStatus",
     "ReportViewModel",
     "Severity",
+    "SuiteBundle",
+    "SuiteModelSummary",
+    "build_suite_model_summary",
     "metric_path",
     "section_title",
     "severity_rank",
