@@ -2,8 +2,10 @@
 # Install this only inside the target GPU-machine venv, not on the local dev machine.
 
 
-# Use CPU PyTorch for export/orchestration. OpenVINO runs the model on Intel GPU.
---extra-index-url https://download.pytorch.org/whl/cpu
+# Intel XPU PyTorch: the PyTorch reference for inference-equivalence drift runs on
+# the SAME Intel GPU as OpenVINO (Intel-GPU PyTorch vs Intel-GPU OpenVINO), so torch
+# must be the XPU build, not CPU. torch.xpu.is_available() must return True.
+--extra-index-url https://download.pytorch.org/whl/xpu
 accelerate>=0.30
 datasets>=2.20,<5
 huggingface-hub>=0.34,<1
@@ -12,5 +14,5 @@ openvino-genai>=2025.0
 optimum-intel[openvino]>=1.20
 safetensors>=0.4.3
 sentencepiece>=0.2
-torch==2.8.0+cpu; platform_system == "Linux" and platform_machine == "x86_64"
+torch>=2.8.0; platform_system == "Linux" and platform_machine == "x86_64"
 transformers>=4.40,<4.58

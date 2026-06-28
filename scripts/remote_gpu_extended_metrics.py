@@ -51,7 +51,7 @@ def main() -> None:
         help="PyTorch/HF reference checkpoint for OpenVINO-vs-PyTorch drift "
         "(base HF id of the exported model). Falls back to --model if omitted.",
     )
-    parser.add_argument("--reference-device", default="cpu")
+    parser.add_argument("--reference-device", default="GPU")
     parser.add_argument("--out", required=True)
     parser.add_argument("--dataset-cache", default="data/wikitext2")
     parser.add_argument("--device", default="GPU")

@@ -247,8 +247,8 @@ def run_gpu_suite(
         str, typer.Option(help="Reference backend for drift (PyTorch reference)")
     ] = "hf",
     reference_device: Annotated[
-        str, typer.Option(help="Device for the PyTorch/HF reference model")
-    ] = "cpu",
+        str, typer.Option(help="Intel GPU device for the PyTorch/HF reference model")
+    ] = "GPU",
 ) -> None:
     container = _container()
     try:

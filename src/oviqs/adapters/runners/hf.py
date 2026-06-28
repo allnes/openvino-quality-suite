@@ -13,10 +13,10 @@ class HFReferenceRunner(BaseLogitsRunner, BaseGenerationRunner):
         exposes_logits=True,
         supports_generation=True,
         supports_dynamic_shapes=True,
-        supported_devices=("cpu", "cuda", "mps"),
+        supported_devices=("xpu",),
     )
 
-    def __init__(self, model_id_or_path: str, device: str = "cpu", dtype: str = "auto") -> None:
+    def __init__(self, model_id_or_path: str, device: str = "xpu", dtype: str = "auto") -> None:
         try:
             import torch
             from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -25,7 +25,7 @@ class HFReferenceRunner(BaseLogitsRunner, BaseGenerationRunner):
 
         self.torch = torch
         self.model_id_or_path = model_id_or_path
-        self.device = device
+        self.device = self._resolve_device(device, torch)
         self.dtype = dtype
         self.tokenizer = AutoTokenizer.from_pretrained(  # nosec B615
             model_id_or_path, use_fast=True
@@ -36,8 +36,32 @@ class HFReferenceRunner(BaseLogitsRunner, BaseGenerationRunner):
         self.model = AutoModelForCausalLM.from_pretrained(  # nosec B615
             model_id_or_path, torch_dtype=torch_dtype
         )
-        self.model.to(device)  # type: ignore[arg-type]
+        self.model.to(self.device)  # type: ignore[arg-type]
         self.model.eval()
+
+    @staticmethod
+    def _resolve_device(device: str, torch) -> str:
+        """Resolve to the Intel GPU torch device (``xpu``); nothing else is allowed.
+
+        OpenVINO names the Intel GPU "GPU"; the equivalent torch device is "xpu".
+        The PyTorch reference must run on Intel GPU so it compares like-for-like
+        against the OpenVINO Intel-GPU model. CPU/CUDA/MPS are rejected, and an
+        unavailable Intel GPU raises instead of silently falling back.
+        """
+
+        alias = device.lower()
+        if alias not in {"gpu", "intel", "intel_gpu", "xpu"}:
+            raise ValueError(
+                f"HFReferenceRunner only supports the Intel GPU (xpu); got device={device!r}. "
+                "Drift is Intel-GPU PyTorch vs Intel-GPU OpenVINO."
+            )
+        if not getattr(torch, "xpu", None) or not torch.xpu.is_available():
+            raise RuntimeError(
+                "Intel GPU (torch xpu) is not available for the PyTorch reference. "
+                "Install the Intel XPU torch build (requirements/gpu.txt) and verify "
+                "torch.xpu.is_available()."
+            )
+        return "xpu"
 
     def run_info(self) -> dict:
         return {

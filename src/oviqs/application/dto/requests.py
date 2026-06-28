@@ -23,8 +23,8 @@ class DriftEvaluationRequest:
     out: Path
     reference_backend: str = "dummy"
     current_backend: str = "dummy"
-    reference_device: str = "CPU"
-    device: str = "CPU"
+    reference_device: str = "GPU"
+    device: str = "GPU"
 
 
 @dataclass(frozen=True)
@@ -73,9 +73,9 @@ class GpuSuiteRequest:
     window_size: int = 64
     stride: int = 32
     genai_model: str | None = None
-    # PyTorch/HF reference for inference equivalence (OpenVINO vs PyTorch drift).
-    # When set, drift compares the OpenVINO model against this PyTorch reference
-    # instead of running a degenerate self-drift.
+    # PyTorch/HF reference for inference equivalence (OpenVINO vs PyTorch drift),
+    # both on the Intel GPU. When set, drift compares the OpenVINO Intel-GPU model
+    # against this PyTorch Intel-GPU reference instead of a degenerate self-drift.
     reference_model: str | None = None
     reference_backend: str = "hf"
-    reference_device: str = "cpu"
+    reference_device: str = "GPU"
