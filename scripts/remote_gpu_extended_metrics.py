@@ -38,6 +38,7 @@ from oviqs.domain.metrics.long_context import (
 )
 from oviqs.domain.metrics.rag import evidence_coverage
 from oviqs.domain.metrics.serving import batch_invariance_drift
+from oviqs.domain.reports import REPORT_CONTRACT_VERSION
 from oviqs.domain.traces import AgentTrace, TraceStep
 
 
@@ -70,6 +71,7 @@ def main() -> None:
     pytorch_reference = HFReferenceRunner(reference_model, device=args.reference_device)
 
     report: dict[str, Any] = {
+        "schema_version": REPORT_CONTRACT_VERSION,
         "run": {
             "id": out.stem,
             "model": args.model,

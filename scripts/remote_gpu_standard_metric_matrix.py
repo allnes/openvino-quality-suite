@@ -59,7 +59,7 @@ from oviqs.domain.metrics.rag import (
 )
 from oviqs.domain.metrics.serving import batch_invariance_drift, kv_cache_drift
 from oviqs.domain.references import get_metric_reference
-from oviqs.domain.reports import write_report
+from oviqs.domain.reports import REPORT_CONTRACT_VERSION, write_report
 from oviqs.domain.traces import AgentTrace, TraceStep
 
 GUIDE_METRICS: dict[str, list[str]] = {
@@ -203,6 +203,7 @@ def main() -> None:
     rag_rows, rag_source = load_squad_rows(cache / "squad_validation_samples.jsonl")
 
     report: dict[str, Any] = {
+        "schema_version": REPORT_CONTRACT_VERSION,
         "run": {
             "id": out.stem,
             "suite": "openvino_llm_quality_v1_standard_metric_matrix",
