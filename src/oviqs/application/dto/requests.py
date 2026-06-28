@@ -73,3 +73,9 @@ class GpuSuiteRequest:
     window_size: int = 64
     stride: int = 32
     genai_model: str | None = None
+    # PyTorch/HF reference for inference equivalence (OpenVINO vs PyTorch drift).
+    # When set, drift compares the OpenVINO model against this PyTorch reference
+    # instead of running a degenerate self-drift.
+    reference_model: str | None = None
+    reference_backend: str = "hf"
+    reference_device: str = "cpu"

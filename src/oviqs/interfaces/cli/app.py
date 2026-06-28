@@ -237,6 +237,18 @@ def run_gpu_suite(
         str | None,
         typer.Option(help="Optional OpenVINO GenAI model directory for generation layer"),
     ] = None,
+    reference_model: Annotated[
+        str | None,
+        typer.Option(
+            help="PyTorch/HF reference model id/path for OpenVINO-vs-PyTorch inference equivalence"
+        ),
+    ] = None,
+    reference_backend: Annotated[
+        str, typer.Option(help="Reference backend for drift (PyTorch reference)")
+    ] = "hf",
+    reference_device: Annotated[
+        str, typer.Option(help="Device for the PyTorch/HF reference model")
+    ] = "cpu",
 ) -> None:
     container = _container()
     try:
@@ -250,6 +262,9 @@ def run_gpu_suite(
                 window_size=window_size,
                 stride=stride,
                 genai_model=genai_model,
+                reference_model=reference_model,
+                reference_backend=reference_backend,
+                reference_device=reference_device,
             ),
             container.runner_factory,
             container.generation_runner_factory,

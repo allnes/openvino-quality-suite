@@ -13,6 +13,7 @@ from typing import Any
 import numpy as np
 from datasets import load_dataset
 
+from oviqs.adapters.runners.hf import HFReferenceRunner
 from oviqs.adapters.runners.ov_genai import OVGenAIRunner
 from oviqs.adapters.runners.ov_runtime import OVRuntimeLogitsRunner
 from oviqs.domain.metrics.agent import (
@@ -174,6 +175,12 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", required=True)
     parser.add_argument("--genai-model")
+    parser.add_argument(
+        "--reference-model",
+        help="PyTorch/HF reference checkpoint for OpenVINO-vs-PyTorch inference "
+        "equivalence (base HF id of the exported model). Falls back to --model.",
+    )
+    parser.add_argument("--reference-device", default="cpu")
     parser.add_argument("--out", required=True)
     parser.add_argument("--dataset-cache", required=True)
     parser.add_argument("--device", default="GPU.1")
@@ -187,7 +194,11 @@ def main() -> None:
     cache.mkdir(parents=True, exist_ok=True)
 
     gpu = OVRuntimeLogitsRunner(args.model, device=args.device)
-    cpu = OVRuntimeLogitsRunner(args.model, device="CPU")
+    # Inference-equivalence reference is PyTorch/HF (source framework), measuring
+    # OpenVINO export + quantization fidelity against PyTorch, not a CPU-vs-GPU
+    # device delta. Defaults to the base checkpoint of the exported model.
+    reference_model = args.reference_model or args.model
+    pytorch_reference = HFReferenceRunner(reference_model, device=args.reference_device)
     texts = load_wikitext2(cache / "wikitext2_validation_samples.jsonl")
     rag_rows, rag_source = load_squad_rows(cache / "squad_validation_samples.jsonl")
 
@@ -197,7 +208,8 @@ def main() -> None:
             "suite": "openvino_llm_quality_v1_standard_metric_matrix",
             "model": args.model,
             "current": "openvino-runtime",
-            "reference": "CPU logits, standard datasets, deterministic oracles",
+            "reference_model": reference_model,
+            "reference": "PyTorch/HF logits, standard datasets, deterministic oracles",
             "device": args.device,
         },
         "standard_datasets": {
@@ -211,7 +223,7 @@ def main() -> None:
         },
     }
     report["likelihood"] = likelihood_section(gpu, texts[: args.max_wikitext_samples])
-    report["inference_equivalence"] = drift_section(cpu, gpu, texts[:3])
+    report["inference_equivalence"] = drift_section(pytorch_reference, gpu, texts[:3])
     report["long_context"] = long_context_section(gpu, texts)
     report["generation"] = generation_section(args.genai_model, args.device)
     report["rag"] = rag_section(rag_rows)

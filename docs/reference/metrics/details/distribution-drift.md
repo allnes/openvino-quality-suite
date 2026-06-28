@@ -1,8 +1,11 @@
 # Distribution drift metrics
 
 Distribution drift metrics compare a reference token distribution with a current
-token distribution at identical sample and token positions. They are runtime and
-export diagnostics, not text-generation quality scores.
+token distribution at identical sample and token positions. The reference is the
+PyTorch/HF model (the source framework) and the current is the exported OpenVINO
+model, so drift quantifies export and quantization fidelity against PyTorch, not
+a CPU-vs-GPU device difference. They are runtime and export diagnostics, not
+text-generation quality scores.
 
 ## Metrics
 
@@ -30,7 +33,7 @@ export diagnostics, not text-generation quality scores.
 
 ## Interpretation
 
-KL is asymmetric and uses the reference distribution as the source of truth.
+KL is asymmetric and uses the PyTorch/HF reference distribution as the source of truth.
 JS is symmetric and bounded, so it is useful when reviewers need a more stable
 summary. Top-k overlap explains whether drift affects likely decoding choices.
 Entropy drift explains confidence changes even when the top token is unchanged.

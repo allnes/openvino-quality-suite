@@ -218,11 +218,15 @@ _REFERENCES: tuple[MetricReference, ...] = (
         primary_reference="SciPy entropy/KL formulas plus deterministic logits fixtures",
         sources=(SCIPY_ENTROPY, GOLDEN_FIXTURES),
         oracle=(
-            "Compare same-position full-vocabulary distributions; identical logits must "
-            "have zero KL/JS and cosine 1."
+            "Compare same-position full-vocabulary distributions of the OpenVINO model "
+            "against a PyTorch/HF reference; identical logits must have zero KL/JS and cosine 1."
         ),
         degradation_rule="Degraded when drift exceeds the configured KL/JS/top-k/cosine gate.",
-        required_inputs=("reference logits", "current logits", "identical tokenizer and positions"),
+        required_inputs=(
+            "PyTorch/HF reference logits",
+            "OpenVINO current logits",
+            "identical tokenizer and positions",
+        ),
     ),
     MetricReference(
         family="long_context",
@@ -568,7 +572,7 @@ _REPORT_SECTIONS = (
     "serving",
     "performance",
     "likelihood_wikitext2",
-    "cpu_gpu_drift",
+    "pytorch_openvino_drift",
     "precision_drift_fp16_vs_int8",
     "long_context_controlled",
     "distractor_conflict",
